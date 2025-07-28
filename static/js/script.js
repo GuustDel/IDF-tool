@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <label name="new_sbar_name_dyn" value="${id}">${id}:</label>
             </div>
             <div class="col">
-                <select id="new_sbar180deg_${busbarName}" name="sbar180deg_${busbarName}">
+                <select id="new_sbar180deg_${busbarName}" name="sbar180deg_${busbarName}" data-prev="0">
                     <option value="0" {% if w_sbar[${busbarName}] == 0 %}selected{% endif %}>0</option>
                     <option value="90" {% if w_sbar[${busbarName}] == 90 %}selected{% endif %}>90</option>
                     <option value="180" {% if w_sbar[${busbarName}] == 180 %}selected{% endif %}>180</option>
@@ -109,13 +109,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 <input type="checkbox" name="new_sbarheight_dyn" value="false">
             </div>
             <div class="col">
-                <input type="number" class="form-control" name="new_placement_x_dyn" placeholder="Enter x" value="0.0" step="any">
+                <input type="number" class="form-control" name="new_placement_x_dyn" placeholder="Enter x" value="0.0" step="any" data-prev="0.0">
             </div>
             <div class="col">
-                <input type="number" class="form-control" name="new_placement_y_dyn" placeholder="Enter y" value="0.0" step="any">
+                <input type="number" class="form-control" name="new_placement_y_dyn" placeholder="Enter y" value="0.0" step="any" data-prev="0.0">
             </div>
             <div class="col">
-                <input type="number" class="form-control" name="new_placement_z_dyn" placeholder="Enter z" value="0.92" step="any">
+                <input type="number" class="form-control" name="new_placement_z_dyn" placeholder="Enter z" value="0.92" step="any" data-prev="0.92">
             </div>
             <div class="col">
                 <input type="number" class="form-control" name="new_outline_length_dyn" placeholder="Enter width" value="100.0" step="any">
@@ -156,7 +156,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </select>
             </div>
             <div class="col">
-                <select id="new_string180deg_${id}" name="new_string180deg_${id}">
+                <select id="new_string180deg_${id}" name="new_string180deg_${id}" data-prev="0">
                     <option value="0" {% if w_string[${id}] == 0 %}selected{% endif %}>0</option>
                     <option value="90" {% if w_string[${id}] == 90 %}selected{% endif %}>90</option>
                     <option value="180" {% if w_string[${id}] == 180 %}selected{% endif %}>180</option>
@@ -164,13 +164,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 </select>
             </div>
             <div class="col">
-                <input type="number" class="form-control" style="width: 150px;" name="new_placement_x_dyn" placeholder="Enter x" value="0.0" step="any">
+                <input type="number" class="form-control" style="width: 150px;" name="new_placement_x_dyn" placeholder="Enter x" value="0.0" step="any" data-prev="0.0">
             </div>
             <div class="col">
-                <input type="number" class="form-control" style="width: 150px;" name="new_placement_y_dyn" placeholder="Enter y" value="0.0" step="any">
+                <input type="number" class="form-control" style="width: 150px;" name="new_placement_y_dyn" placeholder="Enter y" value="0.0" step="any" data-prev="0.0">
             </div>
             <div class="col">
-                <input type="number" class="form-control" style="width: 150px;" name="new_placement_z_dyn" placeholder="Enter z" value="0.92" step="any">
+                <input type="number" class="form-control" style="width: 150px;" name="new_placement_z_dyn" placeholder="Enter z" value="0.92" step="any" data-prev="0.92">
             </div>
         `;
         document.getElementById('existing-rows').appendChild(newRow);
@@ -350,81 +350,72 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     document.getElementById('submit-btn').addEventListener('click', function(event) {
-        // Create a form data object
         const form = document.querySelector('form');
         const formData = new FormData(form);
-        const newRow = document.querySelector('#existing-rows .row:last-child');
-        let allValid = true;
         const warningMessage = document.getElementById('warning-message');
-        
-        if (!newRow) {
-            console.log('All fields are valid');
-            warningMessage.style.display = 'none';
-            fetch('/submit_parameters', {
-                method: 'POST',
-                body: formData
-            }).then(response => {
-                if (response.ok) {
-                    // Handle successful submission, e.g., redirect to another page or update the UI
-                    console.log('Form submitted successfully');
-                    // Optionally, you can redirect to another page
-                    location.reload();
-                } else {
-                    // Handle errors
-                    console.error('Failed to submit form');
-                }
-            }).catch(error => {
-                console.error('Error:', error);
-            });
-            event.preventDefault();
-        } else {
-            const numberInputs = newRow.querySelectorAll('input[type="number"]');
-            const textInput = newRow.querySelector('input[type="text"]');
-            numberInputs.forEach(input => {
-                if (input.value === '' || isNaN(input.value)) {
-                    input.style.borderColor = 'red';
-                    allValid = false;
-                } else {
-                    input.style.borderColor = '';
-                }
-            });
-        
-            // Check text input
-            if (!textInput.value.startsWith('sbar')) {
-                textInput.style.borderColor = 'red';
+        let allValid = true;
+        let orientationPlacementError = false;
+
+        // reset borders
+        form.querySelectorAll('input, select').forEach(el => {
+            el.style.borderColor = '';
+        });
+
+        // check empty fields
+        form.querySelectorAll('input[type="text"], input[type="number"]').forEach(input => {
+            if (input.value.trim() === '') {
+                input.style.borderColor = 'red';
                 allValid = false;
-            } else {
-                textInput.style.borderColor = '';
             }
-        
-            // Display warning message
-            
-            if (!allValid) {
-                console.log('Please fill in all fields correctly');
-                warningMessage.textContent = 'Please fill in all fields correctly. Text input must start with "sbar".';
-                warningMessage.style.display = 'block';
-            } else {
-                console.log('All fields are valid');
-                warningMessage.style.display = 'none';
-                fetch('/submit_parameters', {
-                    method: 'POST',
-                    body: formData
-                }).then(response => {
-                    if (response.ok) {
-                        // Handle successful submission, e.g., redirect to another page or update the UI
-                        console.log('Form submitted successfully');
-                        // Optionally, you can redirect to another page
-                        location.reload();
-                    } else {
-                        // Handle errors
-                        console.error('Failed to submit form');
-                    }
-                }).catch(error => {
-                    console.error('Error:', error);
-                });
-                event.preventDefault();
+        });
+
+        // check orientation + placement changes
+        form.querySelectorAll('select[id^="sbar180deg_"], select[id^="string180deg_"]').forEach(select => {
+            const prevOrientation = select.dataset.prev;
+            const orientationChanged = prevOrientation !== undefined && select.value !== prevOrientation;
+            const row = select.closest('.row');
+            const placementInputs = row ? row.querySelectorAll('input[name^="placement_"]') : [];
+            let placementChanged = false;
+            placementInputs.forEach(input => {
+                const prev = input.dataset.prev;
+                if (prev !== undefined && input.value !== prev) {
+                    placementChanged = true;
+                }
+            });
+            if (orientationChanged && placementChanged) {
+                orientationPlacementError = true;
+                allValid = false;
+                select.style.borderColor = 'red';
+                placementInputs.forEach(inp => { inp.style.borderColor = 'red'; });
             }
+        });
+
+        if (!allValid) {
+            event.preventDefault();
+            if (orientationPlacementError) {
+                warningMessage.textContent = 'Change either orientation or placement, not both. Ensure all fields are filled.';
+            } else {
+                warningMessage.textContent = 'Please fill in all fields.';
+            }
+            warningMessage.style.display = 'block';
+            return;
         }
+
+        warningMessage.style.display = 'none';
+        fetch('/submit_parameters', {
+            method: 'POST',
+            body: formData
+        }).then(response => {
+            if (response.ok) {
+                console.log('Form submitted successfully');
+                location.reload();
+            } else {
+                console.error('Failed to submit form');
+            }
+        }).catch(error => {
+            console.error('Error:', error);
+        });
+        event.preventDefault();
     });
 
     // Add event listener to the form submission
