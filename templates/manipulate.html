@@ -105,7 +105,7 @@
                         <label for="string_{{ id }}" style="width: 220px;">{{ id }}:</label>
                     </div>
                     <div class="col">
-                        <select class="form-control" style="width: 100px;" id="name_{{ id }}" name="name_{{ id }}">
+                        <select class="form-control" style="width: 100px;" id="name_{{ id }}" name="name_{{ id }}" data-prev="{{ placement.name }}">
                             {% for name, outline in corrected_component_outlines.items() %} 
                             {% if outline.component_type == "string" %}
                             <option value="{{ name }}" {% if name == placement.name %}selected{% endif %}>{{ name }}</option>
@@ -114,7 +114,7 @@
                         </select>
                     </div>
                     <div class="col">
-                        <select id="string180deg_{{ id }}" name="string180deg_{{ id }}">
+                        <select id="string180deg_{{ id }}" name="string180deg_{{ id }}" data-prev="{{ w_string[id] }}">
                             <option value="0" {% if w_string[id] == 0 %}selected{% endif %}>0</option>
                             <option value="90" {% if w_string[id] == 90 %}selected{% endif %}>90</option>
                             <option value="180" {% if w_string[id] == 180 %}selected{% endif %}>180</option>
@@ -122,13 +122,13 @@
                         </select>
                     </div>
                     <div class="col">
-                        <input type="number" class="form-control" style="width: 150px;" name="placement_{{ id }}_0" placeholder="Enter a number" value="{{ placement.placement[0] }}">
+                        <input type="number" class="form-control" style="width: 150px;" name="placement_{{ id }}_0" placeholder="Enter a number" value="{{ placement.placement[0] }}" data-prev="{{ placement.placement[0] }}">
                     </div>
                     <div class="col">
-                        <input type="number" class="form-control" style="width: 150px;" name="placement_{{ id }}_1" placeholder="Enter a number" value="{{ placement.placement[1] }}">
+                        <input type="number" class="form-control" style="width: 150px;" name="placement_{{ id }}_1" placeholder="Enter a number" value="{{ placement.placement[1] }}" data-prev="{{ placement.placement[1] }}">
                     </div>
                     <div class="col">
-                        <input type="number" class="form-control" style="width: 150px;" name="placement_{{ id }}_2" placeholder="Enter a number" value="{{ placement.placement[2] }}">
+                        <input type="number" class="form-control" style="width: 150px;" name="placement_{{ id }}_2" placeholder="Enter a number" value="{{ placement.placement[2] }}" data-prev="{{ placement.placement[2] }}">
                     </div>
                 </div>
                 {% endif %}
@@ -186,7 +186,7 @@
                     {% endif %}
                     {% endfor %}
                     <div class="col">
-                        <select id="sbar180deg_{{ sbar }}" name="sbar180deg_{{ sbar }}">
+                        <select id="sbar180deg_{{ sbar }}" name="sbar180deg_{{ sbar }}" data-prev="{{ w_sbar[sbar] }}">
                             <option value="0" {% if w_sbar[sbar] == 0 %}selected{% endif %}>0</option>
                             <option value="90" {% if w_sbar[sbar] == 90 %}selected{% endif %}>90</option>
                             <option value="180" {% if w_sbar[sbar] == 180 %}selected{% endif %}>180</option>
@@ -199,21 +199,21 @@
                     {% for id, placement in corrected_component_placements.items() %}
                         {% if placement.name == sbar %}
                             <div class="col">
-                                <input type="number" class="form-control" name="placement_{{ id }}_0" id="{% if is_last %}autofocus-target{% endif %}" placeholder="Enter a number"placeholder="Enter a number" value="{{ placement.placement[0] }}">
+                                <input type="number" class="form-control" name="placement_{{ id }}_0" id="{% if is_last %}autofocus-target{% endif %}" placeholder="Enter a number" value="{{ placement.placement[0] }}" data-prev="{{ placement.placement[0] }}">
                             </div>
                             <div class="col">
-                                <input type="number" class="form-control" name="placement_{{ id }}_1" placeholder="Enter a number" value="{{ placement.placement[1] }}">
+                                <input type="number" class="form-control" name="placement_{{ id }}_1" placeholder="Enter a number" value="{{ placement.placement[1] }}" data-prev="{{ placement.placement[1] }}">
                             </div>
                             <div class="col">
-                                <input type="number" class="form-control" name="placement_{{ id }}_2" placeholder="Enter a number" value="{{ placement.placement[2] }}">
+                                <input type="number" class="form-control" name="placement_{{ id }}_2" placeholder="Enter a number" value="{{ placement.placement[2] }}" data-prev="{{ placement.placement[2] }}">
                             </div>
                             {% for name, outline in corrected_component_outlines.items() %} 
                                 {% if name == sbar %}
                                     <div class="col">
-                                        <input type="number" class="form-control" name="outline_{{ placement.name }}_0" placeholder="Enter a number" value="{{ outline.coordinates[2][0] }}">
+                                        <input type="number" class="form-control" name="outline_{{ placement.name }}_0" placeholder="Enter a number" value="{{ outline.coordinates[2][0] }}" data-prev="{{ outline.coordinates[2][0] }}">
                                     </div>
                                     <div class="col">
-                                        <input type="number" class="form-control" name="outline_{{ placement.name }}_1" placeholder="Enter a number" value="{{ outline.coordinates[2][1] }}">
+                                        <input type="number" class="form-control" name="outline_{{ placement.name }}_1" placeholder="Enter a number" value="{{ outline.coordinates[2][1] }}" data-prev="{{ outline.coordinates[2][1] }}">
                                     </div>
                                 {% endif %}
                             {% endfor %}
