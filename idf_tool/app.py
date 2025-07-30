@@ -4,6 +4,8 @@ import logging
 import re
 import webbrowser
 
+from numpy import place
+
 # pyinstaller --noconsole --add-data "templates:templates" --add-data "submits:submits" --add-data "uploads:uploads" --add-data "static:static" --add-data "favicon.ico:." idf_tool/app.py
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -13,8 +15,9 @@ from flask_session import Session
 import idf_tool.parse_idf as idf
 import json
 import plotly
+import plotly.graph_objects as go
 from werkzeug.utils import secure_filename
-import numpy as np
+from io import BytesIO
 
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller. """
@@ -54,7 +57,7 @@ def allowed_file(filename):
 @app.route('/')
 def base():
     fig_dir = url_for('static', filename='img/Soltech_Logo.png')
-
+    session.clear()
     return render_template('home.html', fig_dir=fig_dir, enable_drop=True)
 
 @app.route('/home_src')
@@ -99,7 +102,7 @@ def submit_file():
 
     fig = idf.draw_board(board_outline, component_outlines, component_placements)
     graph_json = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
-    
+
     w_sbar = {}
     for sbar in sbars:
         id = [id for id, placement in corrected_component_placements.items() if placement["name"] == sbar][0]
@@ -185,16 +188,18 @@ def submit_parameters():
     for id, placement in corrected_component_placements.items():
         if placement["component_type"] == "string":
             w_string[id] = float(request.form.get(f'string180deg_{id}', 0.0))
-    
+
     for sbar in sbars:
         w_sbar[sbar] = float(request.form.get(f'sbar180deg_{sbar}', 0.0))
         z_sbar[sbar] = bool(request.form.get(f'sbarheight_{sbar}', False))
     logging.info("Route: /submit_parameters - HTML parsed")
 
     # Data processing
+    # Place a new busbar or string on the panel
     if request.form.get('new_sbar_name_dyn', None) is not None or request.form.get('new_string_name_dyn', None) is not None:
         idf.add_components(request.form, corrected_component_outlines, corrected_component_placements, w_sbar, z_sbar, w_string, sbars, strings)
-    
+
+    # Define a new string component
     if request.form.get('cell_type', None) is not None:
         cell_name = request.form.get('new_string_name', "String M10 HC 5 Cells 2mm +10mm -10mm")
         cell_type = request.form.get('cell_type', "M10 HC")
@@ -203,12 +208,9 @@ def submit_parameters():
         plus = float(request.form.get('plus', 10.0))
         minus = float(request.form.get('minus', 10.0))
         corrected_component_outlines = idf.generate_string_outline(cell_type, nr_cells, dist, plus, minus, corrected_component_outlines, cell_name, cell_types, None)
+        strings.append(cell_name)
         print("0", corrected_component_outlines)
 
-    
-    for id, placement in corrected_component_placements.items():
-        placement['name'] == request.form.get(f'name_{id}', placement['name'])
-    
     for i, string in enumerate(strings):
         if request.form.get(f'nr_of_cells_{string}') != "" and request.form.get(f'dist_{string}') != "" and request.form.get(f'plus_{string}') != "" and request.form.get(f'minus_{string}') != "":
             del corrected_component_outlines[string]
@@ -226,8 +228,8 @@ def submit_parameters():
             for id, placement in corrected_component_placements.items():
                 if placement["name"] == string:
                     placement['name'] = cell_name
-            strings = [name for name, _ in corrected_component_outlines.items() if name.startswith('String')]
-            
+            strings = [name for name, outline in corrected_component_outlines.items() if outline['component_type'] == 'string']
+
 
     for sbar, value in w_sbar.items():
         if sbar not in w_sbar_prev:
@@ -242,25 +244,25 @@ def submit_parameters():
             w_string_prev[string].append(value)
         w_string_prev[string].append(value)
         if len(w_string_prev[string]) > 2:
-            w_string_prev[string].pop(0)
+            w_string_prev[string].pop(0) 
 
     string_metadata = {}
     for string in strings:
         outline = corrected_component_outlines[string]
         dist, cell_type, nr_cells, plus, minus = idf.reverse_engineer_string_outline(outline['coordinates'], cell_types)
         string_metadata[string] = {'dist': dist, 'cell_type': cell_type, 'nr_cells': nr_cells, 'plus': plus, 'minus': minus}
-        
 
-    idf.translate(corrected_component_placements, corrected_component_outlines, w_sbar_prev, w_string_prev, request.form)
+
+    idf.translate(corrected_component_placements, corrected_component_outlines, w_sbar_prev, w_string_prev, request.form) 
     idf.rotate(corrected_component_placements, corrected_component_outlines, w_sbar_prev, w_sbar, w_string_prev, w_string, string_metadata, cell_types)
 
     idf.change_string_names(corrected_component_placements, corrected_component_outlines, new_string_names, strings)
     idf.change_sbar_height(corrected_component_outlines, z_sbar)
 
     for sbar in sbars:
-        id = [id for id, placement in corrected_component_placements.items() if placement["name"] == sbar][0]
+        id = [id for id, placement in corrected_component_placements.items() if placement["name"] == sbar][0] 
         w_sbar[sbar] = corrected_component_placements[id]['placement'][3]
-    
+
     for id, placement in corrected_component_placements.items():
         if placement["component_type"] == "string":
             w_string[id] = corrected_component_placements[id]['placement'][3]
@@ -268,7 +270,8 @@ def submit_parameters():
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     new_file_content = idf.regenerate_idf_file_content(file_path, corrected_component_outlines, corrected_component_placements)
     logging.info("Route: /submit_parameters - Data processed")
-    
+
+    print(corrected_component_outlines)
     # Store session data
     session['string_metadata'] = string_metadata
     session['new_file_content'] = new_file_content
@@ -282,7 +285,6 @@ def submit_parameters():
     session['w_string_prev'] = w_string_prev
     session['strings'] = strings
     logging.info("Route: /submit_parameters - Session data stored")
-
     # Clear input fields
     for key in new_string_names.keys():
         new_string_names[key] = ""
@@ -295,22 +297,16 @@ def preview():
     fig_dir = url_for('static', filename='img/Soltech_Logo.png')
 
     # Session retrieval 
-    file_content = session.get('file_content', 'No file content found')
-    graph_json = session.get('graph_json', None)
+    graph_json = session.get('graph_json', json.dumps(go.Figure(), cls=plotly.utils.PlotlyJSONEncoder))
     board_outline = session.get('board_outline', None)
-    component_outlines = session.get('component_outlines', None)
-    component_placements = session.get('component_placements', None)
     corrected_component_outlines = session.get('corrected_component_outlines', {})
     corrected_component_placements = session.get('corrected_component_placements', {})
-    new_file_content = session.get('new_file_content', 'No new file content found')
     logging.info("Route: /observe_src - Session data retrieved")
 
     # Data processing
-    if board_outline is None or component_outlines is None or component_placements is None:
-        return redirect('/')
-    # fig = idf.draw_board(board_outline, component_outlines, component_placements)
-    # graph_json = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
-    
+    if board_outline is None or corrected_component_outlines is None or corrected_component_placements is None:
+        return render_template('observe.html', section='visualize', graph_json=graph_json, graph_json2=json.dumps(go.Figure(), cls=plotly.utils.PlotlyJSONEncoder), fig_dir=fig_dir)
+
     fig2 = idf.draw_board(board_outline, corrected_component_outlines, corrected_component_placements)
     graph_json2 = json.dumps(fig2, cls=plotly.utils.PlotlyJSONEncoder)
     logging.info("Route: /observe_src - Data processed")
@@ -318,8 +314,7 @@ def preview():
     # Store session data
     session['graph_json2'] = graph_json2
     logging.info("Route: /observe_src - Session data stored")
-    
-    return render_template('observe.html', section='visualize', file_content=file_content, graph_json=graph_json, graph_json2=graph_json2, new_file_content=new_file_content, fig_dir=fig_dir)
+    return render_template('observe.html', section='visualize', graph_json=graph_json, graph_json2=graph_json2, fig_dir=fig_dir)
 
 @app.route('/manipulate_src')
 def manipulate():
@@ -337,7 +332,6 @@ def manipulate():
     corrected_component_placements = session.get('corrected_component_placements', None)
     corrected_component_outlines = session.get('corrected_component_outlines', None)
     logging.info("Route: /manipulate_src - Session data retrieved")
-    
     return render_template('manipulate.html', string_metadata=string_metadata, manipulate_after_submit_parameters = True, strings=strings, sbars=sbars, filename=filename, w_sbar=w_sbar, w_string=w_string, new_string_names=new_string_names, z_sbar=z_sbar, corrected_component_placements= corrected_component_placements, fig_dir=fig_dir, corrected_component_outlines=corrected_component_outlines)
 
 @app.route('/remove_busbar', methods=['POST'])
@@ -453,18 +447,22 @@ def preview_src():
 
     # Session retrieval
     file_content = session.get('file_content', 'No file content found')
-    new_file_content = session.get('new_file_content', 'No new file content found')
+    new_file_content = session.get('new_file_content', file_content)
+    filename = session.get('filename', '')
+    output_filename = f'{os.path.splitext(filename)[0]}_output.IDF'
     logging.info("Route: /preview_src - Session data retrieved")
 
-    return render_template('observe.html', section='preview', file_content=file_content, new_file_content=new_file_content, fig_dir=fig_dir)
+    diff_lines = idf.generate_diff(file_content, new_file_content, filename, output_filename)
+    diff_text = '\n'.join(diff_lines)
+    return render_template('observe.html', section='preview', diff_text=diff_text, fig_dir=fig_dir)
 
 @app.route('/visualize_src')
 def visualize_src():
     fig_dir = url_for('static', filename='img/Soltech_Logo.png')
 
     # Session retrieval
-    graph_json2 = session.get('graph_json2', None)
-    graph_json = session.get('graph_json', None)
+    graph_json2 = session.get('graph_json2', json.dumps(go.Figure(), cls=plotly.utils.PlotlyJSONEncoder))
+    graph_json = session.get('graph_json', json.dumps(go.Figure(), cls=plotly.utils.PlotlyJSONEncoder))
     logging.info("Route: /visualize_src - Session data retrieved")
 
     return render_template('observe.html', section='visualize', graph_json=graph_json, graph_json2=graph_json2, fig_dir=fig_dir)
@@ -482,20 +480,23 @@ def export():
 
     # Session retrieval
     filename = session.get('filename', None)
-    new_lines = session.get('new_file_content', 'No new file content found')
-    
+    new_lines = session.get('new_file_content', '')
+
+
     # Get the output directory from the form
-    output_file_path = os.path.join(app.config['EXPORT_FOLDER'], filename)
+    output_file_path = os.path.join(app.config['EXPORT_FOLDER'], f'{os.path.splitext(filename)[0]}_output.IDF')
     logging.info("Route: /export - Session data retrieved")
 
     # Export idf
     idf.export(filename, output_file_path, new_lines)
-    send_file(output_file_path, as_attachment=True, download_name=f'{filename}_output.IDF')
-    print("exported")
-
+    export_bytes = BytesIO(new_lines.encode('utf-8'))
+    export_bytes.seek(0)
     logging.info("Route: /export - File exported")
-    
-    return render_template('home.html', fig_dir=fig_dir)
+
+    return send_file(export_bytes,
+                     as_attachment=True,
+                     download_name=f'{os.path.splitext(filename)[0]}_output.IDF',
+                     mimetype='text/plain')
 
 @app.errorhandler(413)
 def request_entity_too_large(error):
@@ -513,7 +514,7 @@ def generate_busbar_name():
         max_index = max(int(key[2:]) for key in bb_keys)
     else:
         max_index = 0
-    
+
     # Generate new busbar name and ID
     new_index = max_index + 1
     new_id = f'BB{new_index:03}'
@@ -534,25 +535,25 @@ def generate_busbar_name():
 def generate_string_id():
     print("generate_string_id")
     corrected_component_placements = session.get('corrected_component_placements', {})
-    
+
     str_keys = [key for key in corrected_component_placements.keys() if re.match(r'STR\d{3}', key)]
-    
+
     if not str_keys:
         return jsonify(string_id='STR000')
-    
+
     # Extract the numeric part and find the maximum
     max_num = max(int(key[3:]) for key in str_keys)
-    
+
     # Increment the number and format it back to STR###
     next_num = max_num + 1
     next_str_key = f'STR{next_num:03}'
-    
+
     return jsonify(string_id=next_str_key)
 
 @app.route('/generate_string_name', methods=['GET'])
 def generate_string_name():
     print("generate_string_name")
-    
+
     return jsonify(string_name='String M10 HC 5 Cells 2mm +10mm -10mm')
 
 @app.route('/favicon.ico')

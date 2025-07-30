@@ -1,22 +1,20 @@
 import numpy as np
-import os
 import plotly.graph_objects as go
-from collections import Counter
 import re
+import difflib
 
-def most_common_value(lst):
-    if not lst:
-        return None  # Handle empty list case
-    
-    # Filter out 0 values
-    filtered_lst = [value for value in lst if value != 0]
-    
-    if not filtered_lst:
-        return None  # Handle case where all values were 0
-    
-    counter = Counter(filtered_lst)
-    most_common = counter.most_common(1)[0][0]  # Get the most common value
-    return most_common
+def generate_diff(original_text: str, new_text: str, fromfile: str, tofile: str) -> list[str]:
+    original_lines = original_text.splitlines()
+    new_lines = new_text.splitlines()
+
+    diff = difflib.unified_diff(
+        original_lines,
+        new_lines,
+        fromfile=fromfile,
+        tofile=tofile,
+        lineterm=''
+    )
+    return list(diff)
 
 def board_outline(file_path):
     with open(file_path, 'r') as f:
@@ -37,7 +35,7 @@ def board_outline(file_path):
                     coordinates.append((float(parts[1]), float(parts[2]), float(parts[3])))
         board_outline = np.array(coordinates)
         return board_outline
-    
+
 def component_placements(file_path):
     with open(file_path, 'r') as f:
         lines = f.readlines()
@@ -98,19 +96,19 @@ def component_outlines(file_path):
                     coordinates.append([float(parts[1]), float(parts[2]), float(parts[3])])
                     component_outlines[component_name]['coordinates'] = np.array(coordinates)
     return component_outlines
-    
+
 def get_component_names_by_type(component_outlines):
     sbars = []
     strings = []
-    
+
     for name, details in component_outlines.items():
         if details['component_type'] == 'busbar':
             sbars.append(name)
         elif details['component_type'] == 'string':
             strings.append(name)
-    
+
     return sbars, strings
-    
+
 def draw_board(board_outline, component_outlines, component_placements):
     fig = go.Figure()
 
@@ -121,11 +119,11 @@ def draw_board(board_outline, component_outlines, component_placements):
     # Add component outlines and placements
     for component_id, component_placement in component_placements.items():
         component_outline = component_outlines[component_placement['name']]
-        
+
         angle = component_placement['placement'][3]
         cos_angle = np.cos(angle * np.pi / 180)
         sin_angle = np.sin(angle * np.pi / 180)
-        
+
         rotated_coordinates = []
         for point in component_outline['coordinates']:
             x, y, z = point
@@ -203,8 +201,8 @@ def translate(corrected_component_placements, corrected_component_outlines, w_sb
 def rotate0to180(id, corrected_component_placements, corrected_component_outlines, string_metadata, cell_types):
     outline = corrected_component_outlines[corrected_component_placements[id]['name']]['coordinates']
     if corrected_component_placements[id]['component_type'] == "string":
-        component_long_side = cell_types[string_metadata[corrected_component_placements[id]['name']]['cell_type']][1]
-        component_short_side = string_metadata[corrected_component_placements[id]['name']]['nr_cells'] * cell_types[string_metadata[corrected_component_placements[id]['name']]['cell_type']][0] + (string_metadata[corrected_component_placements[id]['name']]['nr_cells']-1) * string_metadata[corrected_component_placements[id]['name']]['dist']
+        component_long_side = cell_types[string_metadata[corrected_component_placements[id]['name']]['cell_type']][0]
+        component_short_side = string_metadata[corrected_component_placements[id]['name']]['nr_cells'] * cell_types[string_metadata[corrected_component_placements[id]['name']]['cell_type']][1] + (string_metadata[corrected_component_placements[id]['name']]['nr_cells']-1) * string_metadata[corrected_component_placements[id]['name']]['dist']
     else:
         component_long_side = np.max(outline)
         component_short_side = 5
@@ -226,8 +224,8 @@ def rotate0to180(id, corrected_component_placements, corrected_component_outline
 def rotate180to0(id, corrected_component_placements, corrected_component_outlines, string_metadata, cell_types):
     outline = corrected_component_outlines[corrected_component_placements[id]['name']]['coordinates']
     if corrected_component_placements[id]['component_type'] == "string":
-        component_long_side = cell_types[string_metadata[corrected_component_placements[id]['name']]['cell_type']][1]
-        component_short_side = string_metadata[corrected_component_placements[id]['name']]['nr_cells'] * cell_types[string_metadata[corrected_component_placements[id]['name']]['cell_type']][0] + (string_metadata[corrected_component_placements[id]['name']]['nr_cells']-1) * string_metadata[corrected_component_placements[id]['name']]['dist']
+        component_long_side = cell_types[string_metadata[corrected_component_placements[id]['name']]['cell_type']][0]
+        component_short_side = string_metadata[corrected_component_placements[id]['name']]['nr_cells'] * cell_types[string_metadata[corrected_component_placements[id]['name']]['cell_type']][1] + (string_metadata[corrected_component_placements[id]['name']]['nr_cells']-1) * string_metadata[corrected_component_placements[id]['name']]['dist']
     else:
         component_long_side = np.max(outline)
         component_short_side = 5
@@ -259,12 +257,12 @@ def rotate(corrected_component_placements, corrected_component_outlines, w_sbar_
     for id, component_placement in corrected_component_placements.items():
         for sbar, _ in w_sbar.items():
             if sbar == component_placement['name']:
-                prev_angle = w_sbar_prev[sbar][0]
-                current_angle = w_sbar[sbar]
-                if prev_angle != current_angle:
+                prev_angle = w_sbar_prev[sbar][0] if w_sbar_prev[sbar][0] != -90 else 270
+                current_angle = w_sbar[sbar] if w_sbar[sbar] != -90 else 270
+                if w_sbar_prev[sbar][0] != w_sbar[sbar]:
                     # Rotate back to 0
                     rotate_to_zero(corrected_component_placements, corrected_component_outlines, id, prev_angle, string_metadata, cell_types)
-                    
+
                     # Rotate to the current angle
                     if current_angle == 90:
                         corrected_component_placements[id]['placement'][3] += 90
@@ -273,13 +271,15 @@ def rotate(corrected_component_placements, corrected_component_outlines, w_sbar_
                     elif current_angle == 270:
                         corrected_component_placements[id]['placement'][3] += 90
                         rotate0to180(id, corrected_component_placements, corrected_component_outlines, string_metadata, cell_types)
+                        if w_sbar[sbar] == -90:
+                            corrected_component_placements[id]['placement'][3] = -90
     for id, _ in w_string.items():
-        prev_angle = w_string_prev[id][0]
-        current_angle = w_string[id]
-        if prev_angle != current_angle:
+        prev_angle = w_string_prev[id][0] if w_string_prev[id][0] != -90 else 270
+        current_angle = w_string[id] if w_string[id] != -90 else 270
+        if w_string_prev[id][0] != w_string[id]:
             # Rotate back to 0
             rotate_to_zero(corrected_component_placements, corrected_component_outlines, id, prev_angle, string_metadata, cell_types)
-            
+
             # Rotate to the current angle
             if current_angle == 90:
                 corrected_component_placements[id]['placement'][3] += 90
@@ -288,6 +288,8 @@ def rotate(corrected_component_placements, corrected_component_outlines, w_sbar_
             elif current_angle == 270:
                 corrected_component_placements[id]['placement'][3] += 90
                 rotate0to180(id, corrected_component_placements, corrected_component_outlines, string_metadata, cell_types)
+                if w_string[id] == -90:
+                    corrected_component_placements[id]['placement'][3] = -90
     return
 
 def regenerate_idf_file_content(file_path, corrected_component_outlines, corrected_component_placements):
@@ -297,7 +299,7 @@ def regenerate_idf_file_content(file_path, corrected_component_outlines, correct
     for i in range(len(lines)):
         if i < 12:
             new_lines += f'{lines[i]}'
-    
+
     new_lines += '.PLACEMENT' + '\n'
     for component_id, component_placement in corrected_component_placements.items():
         if component_placement['component_type'] == 'string':
@@ -308,7 +310,7 @@ def regenerate_idf_file_content(file_path, corrected_component_outlines, correct
             new_lines += f'"{component_placement["name"]}" "{component_placement["component_type"]}" {component_id}\n'
             new_lines += f'{component_placement["placement"][0]} {component_placement["placement"][1]} {component_placement["placement"][2]} {component_placement["placement"][3]} TOP PLACED\n'
     new_lines += '.END_PLACEMENT' + '\n'
-    
+
     for component_id, corrected_component_outline in corrected_component_outlines.items():
         if corrected_component_outline['component_type'] == 'busbar':
             new_lines += '.MECHANICAL' + '\n'
@@ -369,7 +371,7 @@ def add_busbar(corrected_component_outlines, corrected_component_placements, w_s
         max_index = max(int(key[2:]) for key in bb_keys)
     else:
         max_index = 0
-    
+
     new_index = max_index + 1
     new_id = f'BB{new_index:03}'
 
@@ -384,7 +386,7 @@ def add_string(corrected_component_placements, w_string, new_string_data, string
     placement = [float(new_placement_x), float(new_placement_y), float(new_placement_z), 0.0]
 
     str_keys = [key for key in corrected_component_placements.keys() if re.match(r'STR\d{3}', key)]
-    
+
     if not str_keys:
         next_str_key = 'STR000'
     else:
@@ -413,7 +415,7 @@ def change_string_names(corrected_component_placements, corrected_component_outl
 def insert_at_index(d, key, value, index):
     """
     Insert a key-value pair at a specific index in a dictionary.
-    
+
     :param d: The original dictionary
     :param key: The key to insert
     :param value: The value to insert
@@ -421,21 +423,19 @@ def insert_at_index(d, key, value, index):
     :return: A new dictionary with the key-value pair inserted at the specified index
     """
     new_dict = {}
-    
+
     if index is None:
         index = 999
-    print(index)
 
     for i, (k, v) in enumerate(d.items()):
         if i == index:
             new_dict[key] = value
         new_dict[k] = v
-    
-    
+
+
     if index >= len(d):
         new_dict[key] = value
-    # print(new_dict)
-    
+
     return new_dict
 
 
@@ -504,7 +504,7 @@ def reverse_engineer_string_outline(outline, cell_types):
                 i += 1
 
         return count
-    
+
     outline = np.array(outline)
 
     calculated_minus = float(np.abs(np.min(outline.flatten())))
@@ -517,7 +517,7 @@ def reverse_engineer_string_outline(outline, cell_types):
         calculated_cell_type = 'M10'
     else:
         calculated_cell_type = 'G1'
-        
+
     calculated_nr_cells = count_nr_cells(outline[:, 0], cell_types[calculated_cell_type][0], cell_types[calculated_cell_type][0]-cell_types[calculated_cell_type][3])
 
     calculated_plus = float(np.max(outline.flatten()) - (calculated_nr_cells * cell_types[calculated_cell_type][1] + (calculated_nr_cells-1)*calculated_dist))
@@ -534,4 +534,4 @@ def change_sbar_height(corrected_component_outlines, z_sbar):
 
 def export(filename, output_file_path, new_lines):
     with open(output_file_path, 'w') as outfile:
-            outfile.write(new_lines)
+        outfile.write(new_lines)

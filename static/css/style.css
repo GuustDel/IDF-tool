@@ -1,3 +1,6 @@
+/* ------------------------------------------
+   Global Styles (your existing CSS)
+------------------------------------------ */
 head {
     margin: 0;
     padding: 0;
@@ -26,8 +29,8 @@ body {
 
 .grid-container {
     display: grid;
-    grid-template-columns: 50% 50%; /* Two equal columns */
-    gap: 20px; /* Space between columns */
+    grid-template-columns: 50% 50%;
+    gap: 20px;
 }
 
 .grid-item {
@@ -37,12 +40,12 @@ body {
 }
 
 .grid-item p {
-    width: 100%; /* Ensure paragraphs take up full width of the grid item */
+    width: 100%;
 }
 
 pre {
-    white-space: pre-wrap; /* Ensure long lines wrap */
-    word-wrap: break-word; /* Ensure long words break */
+    white-space: pre-wrap;
+    word-wrap: break-word;
 }
 
 .plot-container {
@@ -51,54 +54,57 @@ pre {
 }
 
 .plot-item {
-    margin-bottom: 20px; /* Add some space between the plots */
+    margin-bottom: 20px;
 }
 
 .custom-col {
-    padding: 20px; /* Adjust the padding value as needed */
+    padding: 20px;
     margin: 0 10px 20px 10px;
 }
 
-.custom-col2 {
-    padding: 0; /* Adjust the padding value as needed */
+.custom-col2 .col {
+    padding: 0;
     margin: 20px 0 0 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
 }
 
 fieldset {
-    border: 1px solid #ccc; /* Optional: Add a border */
-    border-radius: 15px; /* Adjust the radius as needed */
-    padding: 10px; /* Optional: Add some padding */
-    margin-bottom: 20px; /* Add vertical space below the container */
+    border: 1px solid #ccc;
+    border-radius: 15px;
+    padding: 10px;
+    margin-bottom: 20px;
     position: relative;
 }
 
 legend {
-    padding: 0 10px; /* Add padding around the text */
-    font-weight: bold; /* Make the text bold */
+    padding: 0 10px;
+    font-weight: bold;
 }
 
 .nav-tabs .nav-link.active {
-    background-color: #f0f0f0; /* Replace with your page's background color */
-    border-color: #dee2e6 #dee2e6 #f0f0f0; /* Adjust border color to match the design */
+    background-color: #f0f0f0;
+    border-color: #dee2e6 #dee2e6 #f0f0f0;
     border-width: 2px;
-    border-bottom: 0; /* Remove the bottom border */
+    border-bottom: 0;
 }
 
 .nav-tabs {
-    border-bottom: 2px solid #dee2e6; /* Adjust the thickness and color as needed */
+    border-bottom: 2px solid #dee2e6;
 }
 
-.nav-link.active
-{
-    border-bottom: 0px
+.nav-link.active {
+    border-bottom: 0px;
 }
 
 .file-content-container {
-    height: 80vh; /* Adjust the height as needed */
+    height: 80vh;
     overflow-y: scroll;
-    border: 1px solid #ccc; /* Optional: Add a border for better visibility */
-    padding: 10px; /* Optional: Add some padding */
-    background-color: #f8f9fa; /* Optional: Add a background color */
+    border: 1px solid #ccc;
+    padding: 10px;
+    background-color: #f8f9fa;
     position: relative;
 }
 
@@ -114,18 +120,91 @@ legend {
 }
 
 .form-container {
-    max-width: 600px; /* Adjust the width as needed */
-    margin: 0 auto; /* Center the form */
+    max-width: 600px;
+    margin: 0 auto;
     height: 100%;
 }
 
 .submit-container {
-    max-width: 300px; /* Adjust the width as needed */
-    margin: 0 auto; /* Center the form */
+    max-width: 300px;
+    margin: 0 auto;
 }
 
 .home-container {
     height: 100%;
     padding-top: 122px;
     padding-bottom: 122px;
+}
+
+.diff-window {
+    overflow: auto;
+    text-align: left;
+}
+
+/* ------------------------------------------
+   Section 1: Strings → Metadata Editor
+------------------------------------------ */
+.strings-meta .row {
+    display: grid !important;
+    grid-template-columns:
+       15%
+       20%
+       repeat(5, 8%)
+    ;
+    gap: 0;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+}
+
+.strings-meta input,
+.strings-meta select {
+    width: 100% !important;
+    box-sizing: border-box;
+}
+
+/* ------------------------------------------
+   Section 2: Strings → Placement Editor
+------------------------------------------ */
+.strings-placement .row {
+    display: grid !important;
+    grid-template-columns:
+        5%
+        10%
+        20%
+        5%
+        repeat(3, 10%)
+    ;
+    gap: 0;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+}
+
+.strings-placement input,
+.strings-placement select {
+    width: 100% !important;
+    box-sizing: border-box;
+}
+
+/* ------------------------------------------
+   Section 3: Busbars → Placement Editor
+------------------------------------------ */
+.busbars-placement .row {
+    display: grid !important;
+    grid-template-columns:
+        repeat(3, 5%)
+        12%
+        repeat(5, 10%)
+    ;
+    gap: 0;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+}
+
+.busbars-placement input,
+.busbars-placement select {
+    width: 100% !important;
+    box-sizing: border-box;
 }

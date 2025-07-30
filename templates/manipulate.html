@@ -4,38 +4,46 @@
 
 {% block content %}
 <h1>Manipulate</h1>
-<form action="/submit_parameters" method="post" enctype="multipart/form-data">
+<form action="/submit_parameters" method="post" enctype="multipart/form-data", data-filename="{{ filename if filename else '' }}", data-strings="{{ strings if strings else '' }}">
     <div class="row custom-col">
         <fieldset class="row custom-col border border-2 rounded-2" style="border-color: #ccc">
             <div class="row custom-col2" style="margin: 0;">
                 <p><strong>Active IDF:</strong></p>
             </div>
+
             <div class="row custom-col2" style="margin: 0;">
                 {% if filename %}
-                    <p>{{ filename }}</p>
+                <pre>{{ filename }}</pre>
+                {% else %}
+                <pre>No file submitted</pre>
                 {% endif %}
             </div>
         </fieldset>
-        <fieldset class="row custom-col border border-2 rounded-2" style="border-color: #ccc">
+        <fieldset class="row custom-col border border-2 rounded-2 strings-section" style="border-color: #ccc">
             <legend>Strings</legend>
-            <div class="row custom-col2">
-                <div class="col" style="width: 200;"></div>
-                <div class="col" style="width: 150;">New Name</div>
-                <div class="col" style="width: 150;">
-                    <span>Cell Type</span>
-                </div>
-                <div class="col" style="width: 150;">
-                    <span>Nr of Cells</span>
-                </div>
-                <div class="col" style="width: 150;">
-                    <span>Dist</span>
-                </div>
-                <div class="col" style="width: 150;">
-                    <span>+</span>
-                </div>
-                <div class="col" style="width: 150;">
-                    <span>-</span>
-                </div>
+
+            <div class="strings-meta">
+                {% if string_metadata %}
+                <div class="row custom-col2">
+                    <div class="col"></div>
+                    <div class="col" style="width: 300;">
+                        <span> New Name </span>
+                    </div>
+                    <div class="col" style="width: 150;">
+                        <span>Cell Type</span>
+                    </div>
+                    <div class="col" style="width: 150;">
+                        <span>Nr of Cells</span>
+                    </div>
+                    <div class="col" style="width: 150;">
+                        <span>Dist</span>
+                    </div>
+                    <div class="col" style="width: 150;">
+                        <span>+</span>
+                    </div>
+                    <div class="col" style="width: 150;">
+                        <span>-</span>
+                    </div>
                 </div>
                 {% for name, metadata in string_metadata.items() %} 
                 <div class="row custom-col2">
@@ -43,7 +51,7 @@
                         <label for="string_{{ name }}" style="width: 200px;">{{ name }}:</label>
                     </div>
                     <div class="col">
-                        <input type="text" class="form-control" style="width: 150px;" id="string_{{ name }}" name="string_{{ name }}" value="{{ name }}">
+                        <input type="text" class="form-control" style="width: 300px;" id="string_{{ name }}" name="string_{{ name }}" value="{{ name }}">
                     </div>
                     <div class="col">
                         <select class="form-control" style="width: 150px;" id="cell_type_{{ name }}" name="cell_type_{{ name }}">
@@ -66,30 +74,38 @@
                     </div>
                 </div>
                 {% endfor %}
-                <div class="row mb-2" id="existing-rows3"></div>
-                <div class="col">
-                    <button type="button" style="width: 500px;" class="btn btn-secondary" id="add-row-btn3">Add</button>
-                </div>
-                <div class="row custom-col2">
+                {% else %}
+                <pre> Nothing to see here. </pre>
+                {% endif %}
+            </div>
+
+            <div class="row mb-2" id="existing-rows3"></div>
+            <div class="col">
+                <button type="button" style="width: 500px;" class="btn btn-secondary" id="add-row-btn3">➕ Define String Component</button>
+            </div>
+
+            <div class="strings-placement">
+                {% if corrected_component_placements.values() | selectattr("component_type", "equalto", "string") | list %}
+
+                <div class="row custom-col2 text-center align-items-center">
                     <div class="col"></div>
                     <div class="col"></div>
-                    <div class="col">
+                    <div class="col d-flex justify-content-center">
                         <span>String</span>
                     </div>
-                    <div class="col">
+                    <div class="col d-flex justify-content-center">
                         <span>W</span>
                     </div>
-                    <div class="col">
+                    <div class="col d-flex justify-content-center">
                         <span>X</span>
                     </div>
-                    <div class="col">
+                    <div class="col d-flex justify-content-center">
                         <span>Y</span>
                     </div>
-                    <div class="col">
+                    <div class="col d-flex justify-content-center">
                         <span>Z</span>
                     </div>
                 </div>
-            {% if strings %}
                 {% for id, placement in corrected_component_placements.items() %}
                 {% if placement.component_type == "string" %}
                 <div class="row mb-2">
@@ -100,12 +116,12 @@
                             </svg>
                         </button>
                     </div>
-                    
+
                     <div class="col">
-                        <label for="string_{{ id }}" style="width: 220px;">{{ id }}:</label>
+                        <label for="string_{{ id }}" style="width: 100px;">{{ id }}:</label>
                     </div>
                     <div class="col">
-                        <select class="form-control" style="width: 100px;" id="name_{{ id }}" name="name_{{ id }}">
+                        <select class="form-control" style="width: 300px;" id="name_{{ id }}" name="name_{{ id }}">
                             {% for name, outline in corrected_component_outlines.items() %} 
                             {% if outline.component_type == "string" %}
                             <option value="{{ name }}" {% if name == placement.name %}selected{% endif %}>{{ name }}</option>
@@ -114,11 +130,12 @@
                         </select>
                     </div>
                     <div class="col">
-                        <select id="string180deg_{{ id }}" name="string180deg_{{ id }}">
+                        <select class="form-control" style="width: 80px;" id="string180deg_{{ id }}" name="string180deg_{{ id }}">
                             <option value="0" {% if w_string[id] == 0 %}selected{% endif %}>0</option>
                             <option value="90" {% if w_string[id] == 90 %}selected{% endif %}>90</option>
                             <option value="180" {% if w_string[id] == 180 %}selected{% endif %}>180</option>
                             <option value="270" {% if w_string[id] == 270 %}selected{% endif %}>270</option>
+                            <option value="-90" {% if w_string[id] == -90 %}selected{% endif %}>-90</option>
                         </select>
                     </div>
                     <div class="col">
@@ -133,41 +150,51 @@
                 </div>
                 {% endif %}
                 {% endfor %}
-            {% endif %}
+                {% else %}
+                <legend> </legend>
+                <legend> </legend>
+                <legend> </legend>
+
+                <pre> Nothing to see here. </pre>
+                {% endif %}
+            </div>
             <div class="row mb-2" id="existing-rows"></div>
             <div class="col">
-                <button type="button" style="width: 500px;" class="btn btn-secondary" id="add-row-btn">Add</button>
+                <button type="button" style="width: 500px;" class="btn btn-secondary" id="add-row-btn">📍 Place String on Panel</button>
             </div>
             <div class="row mb-2" id="existing-rows"></div>
         </fieldset>
-        <fieldset class="row custom-col border border-2 rounded-2" style="border-color: #ccc">
+        <fieldset class="row custom-col border border-2 rounded-2 busbars-section" style="border-color: #ccc">
             <legend>Busbars</legend>
-            <div class="row">
-                <div class="col"></div>
-                <div class="col"></div>
-                <div class="col">
-                    <span>W</span>
+            <legend> </legend>
+
+            <div class="busbars-placement">
+                {% if sbars %}
+                <div class="row">
+                    <div class="col"></div>
+                    <div class="col"></div>
+                    <div class="col">
+                        <span>W</span>
+                    </div>
+                    <div class="col">
+                        <span>Soldering on Panel</span>
+                    </div>
+                    <div class="col">
+                        <span>X</span>
+                    </div>
+                    <div class="col">
+                        <span>Y</span>
+                    </div>
+                    <div class="col">
+                        <span>Z</span>
+                    </div>
+                    <div class="col">
+                        <span>Width</span>
+                    </div>
+                    <div class="col">
+                        <span>Height</span>
+                    </div>
                 </div>
-                <div class="col">
-                    <span>Soldering Support</span>
-                </div>
-                <div class="col">
-                    <span>X</span>
-                </div>
-                <div class="col">
-                    <span>Y</span>
-                </div>
-                <div class="col">
-                    <span>Z</span>
-                </div>
-                <div class="col">
-                    <span>Width</span>
-                </div>
-                <div class="col">
-                    <span>Height</span>
-                </div>
-            </div>
-            {% if sbars %}
                 {% for sbar in sbars %}
                 {% set is_last = loop.last %} 
                 <div class="row mb-2">
@@ -186,50 +213,57 @@
                     {% endif %}
                     {% endfor %}
                     <div class="col">
-                        <select id="sbar180deg_{{ sbar }}" name="sbar180deg_{{ sbar }}">
+                        <select class="form-control" style="width: 80px;" id="sbar180deg_{{ sbar }}" name="sbar180deg_{{ sbar }}">
                             <option value="0" {% if w_sbar[sbar] == 0 %}selected{% endif %}>0</option>
                             <option value="90" {% if w_sbar[sbar] == 90 %}selected{% endif %}>90</option>
                             <option value="180" {% if w_sbar[sbar] == 180 %}selected{% endif %}>180</option>
                             <option value="270" {% if w_sbar[sbar] == 270 %}selected{% endif %}>270</option>
+                            <option value="-90" {% if w_sbar[sbar] == -90 %}selected{% endif %}>-90</option>
                         </select>
                     </div>
                     <div class="col">
                         <input type="checkbox" id="sbarheight_{{ sbar }}" name="sbarheight_{{ sbar }}" {% if z_sbar[sbar] %}checked{% endif %}>
                     </div>
                     {% for id, placement in corrected_component_placements.items() %}
-                        {% if placement.name == sbar %}
-                            <div class="col">
-                                <input type="number" class="form-control" name="placement_{{ id }}_0" id="{% if is_last %}autofocus-target{% endif %}" placeholder="Enter a number"placeholder="Enter a number" value="{{ placement.placement[0] }}">
-                            </div>
-                            <div class="col">
-                                <input type="number" class="form-control" name="placement_{{ id }}_1" placeholder="Enter a number" value="{{ placement.placement[1] }}">
-                            </div>
-                            <div class="col">
-                                <input type="number" class="form-control" name="placement_{{ id }}_2" placeholder="Enter a number" value="{{ placement.placement[2] }}">
-                            </div>
-                            {% for name, outline in corrected_component_outlines.items() %} 
-                                {% if name == sbar %}
-                                    <div class="col">
-                                        <input type="number" class="form-control" name="outline_{{ placement.name }}_0" placeholder="Enter a number" value="{{ outline.coordinates[2][0] }}">
-                                    </div>
-                                    <div class="col">
-                                        <input type="number" class="form-control" name="outline_{{ placement.name }}_1" placeholder="Enter a number" value="{{ outline.coordinates[2][1] }}">
-                                    </div>
-                                {% endif %}
-                            {% endfor %}
-                        {% endif %}
-                        
+                    {% if placement.name == sbar %}
+                    <div class="col">
+                        <input type="number" class="form-control" name="placement_{{ id }}_0" id="{% if is_last %}autofocus-target{% endif %}" placeholder="Enter a number"placeholder="Enter a number" value="{{ placement.placement[0] }}">
+                    </div>
+                    <div class="col">
+                        <input type="number" class="form-control" name="placement_{{ id }}_1" placeholder="Enter a number" value="{{ placement.placement[1] }}">
+                    </div>
+                    <div class="col">
+                        <input type="number" class="form-control" name="placement_{{ id }}_2" placeholder="Enter a number" value="{{ placement.placement[2] }}">
+                    </div>
+                    {% for name, outline in corrected_component_outlines.items() %} 
+                    {% if name == sbar %}
+                    <div class="col">
+                        <input type="number" class="form-control" name="outline_{{ placement.name }}_0" placeholder="Enter a number" value="{{ outline.coordinates[2][0] }}">
+                    </div>
+                    <div class="col">
+                        <input type="number" class="form-control" name="outline_{{ placement.name }}_1" placeholder="Enter a number" value="{{ outline.coordinates[2][1] }}">
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                    {% endif %}
+
                     {% endfor %}
                 </div>
                 {% endfor %}
-            {% endif %}
+                {% else %}
+                <pre> Nothing to see here. </pre>
+                {% endif %}
+            </div>
+
             <div class="row mb-2" id="existing-rows2"></div>
             <div class="col">
-                <button type="button" style="width: 500px;" class="btn btn-secondary" id="add-row-btn2">Add</button>
+                <button type="button" style="width: 500px;" class="btn btn-secondary" id="add-row-btn2">➕ Add Busbar</button>
             </div>
         </fieldset>
     </div>
-    <div id="warning-message" style="color: red; display: none;"></div>
+    <div id="warning-message" style="color: red; display: none;">
+        {{ warning_message if warning_message else '' }}
+    </div>
     <button type="button" class="btn btn-outline-primary" id="submit-btn">Submit Parameters</button>
 </form>
 {% endblock %}
