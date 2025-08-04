@@ -85,8 +85,7 @@
             </div>
 
             <div class="strings-placement">
-                {% if corrected_component_placements.values() | selectattr("component_type", "equalto", "string") | list %}
-
+                {% if corrected_component_placements and corrected_component_placements.values() | selectattr("component_type", "equalto", "string") | list %}
                 <div class="row custom-col2 text-center align-items-center">
                     <div class="col"></div>
                     <div class="col"></div>
