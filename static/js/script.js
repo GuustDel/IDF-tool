@@ -116,7 +116,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <label name="new_sbar_name_dyn" value="${id}">${id}:</label>
 </div>
 <div class="col">
-    <select class="form-control" style="width: 80px;" id="new_sbar180deg_${busbarName}" name="sbar180deg_${busbarName}">
+    <select class="form-control" id="new_sbar180deg_${busbarName}" name="sbar180deg_${busbarName}">
         <option value="0" {% if w_sbar[${busbarName}] == 0 %}selected{% endif %}>0</option>
         <option value="90" {% if w_sbar[${busbarName}] == 90 %}selected{% endif %}>90</option>
         <option value="180" {% if w_sbar[${busbarName}] == 180 %}selected{% endif %}>180</option>
@@ -162,10 +162,10 @@ document.addEventListener('DOMContentLoaded', function() {
     </button>
 </div>
 <div class="col">
-    <label name="new_string_name_dyn" style="width: 220px;" value="${id}">${id}:</label>
+    <label name="new_string_name_dyn" value="${id}">${id}:</label>
 </div>
 <div class="col">
-    <select class="form-control" style="width: 100px;" id="name_{{ id }}" name="string_${id}">
+    <select class="form-control" id="name_{{ id }}" name="string_${id}">
         {% for name, outline in corrected_component_outlines.items() %} 
         {% if outline.component_type == "string" %}
         <option value="{{ name }}" {% if name == placement.name %}selected{% endif %}></option>
@@ -174,7 +174,7 @@ document.addEventListener('DOMContentLoaded', function() {
     </select>
 </div>
 <div class="col">
-    <select class="form-control" style="width: 80px;" id="new_string180deg_${id}" name="new_string180deg_${id}">
+    <select class="form-control" id="new_string180deg_${id}" name="new_string180deg_${id}">
         <option value="0" {% if w_string[${id}] == 0 %}selected{% endif %}>0</option>
         <option value="90" {% if w_string[${id}] == 90 %}selected{% endif %}>90</option>
         <option value="180" {% if w_string[${id}] == 180 %}selected{% endif %}>180</option>
@@ -182,13 +182,13 @@ document.addEventListener('DOMContentLoaded', function() {
     </select>
 </div>
 <div class="col">
-    <input type="number" class="form-control" style="width: 150px;" name="new_placement_x_dyn" placeholder="Enter x" value="0.0" step="any">
+    <input type="number" class="form-control" name="new_placement_x_dyn" placeholder="Enter x" value="0.0" step="any">
 </div>
 <div class="col">
-    <input type="number" class="form-control" style="width: 150px;" name="new_placement_y_dyn" placeholder="Enter y" value="0.0" step="any">
+    <input type="number" class="form-control" name="new_placement_y_dyn" placeholder="Enter y" value="0.0" step="any">
 </div>
 <div class="col">
-    <input type="number" class="form-control" style="width: 150px;" name="new_placement_z_dyn" placeholder="Enter z" value="0.92" step="any">
+    <input type="number" class="form-control" name="new_placement_z_dyn" placeholder="Enter z" value="0.92" step="any">
 </div>
 `;
         document.getElementById('existing-rows').appendChild(newRow);
@@ -204,29 +204,29 @@ document.addEventListener('DOMContentLoaded', function() {
         newRow.className = 'row mb-2';
         newRow.innerHTML = `
 <div class="col">
-    <label for="string_${name} style="width: 200px;">${name}:</label>
+    <label for="string_${name}">${name}:</label>
 </div>
 <div class="col">
-    <input type="text" class="form-control" style="width: 150px;" id="string_${name}" name="string_${name}" value="">
+    <input type="text" class="form-control" id="string_${name}" name="string_${name}" value="">
 </div>
 <div class="col">
-    <select class="form-control" style="width: 150px;"id="cell_type_${name}" name="cell_type_{{ name }}">
+    <select class="form-control" id="cell_type_${name}" name="cell_type_{{ name }}">
         <option value="M10">M10</option>
         <option value="M10 HC">M10 HC</option>
         <option value="G1">G1</option>
     </select>
 </div>
 <div class="col">
-    <input type="number" class="form-control" style="width: 150px;" id="nr_cells_${name}" name="nr_of_cells_${name}" value="">
+    <input type="number" class="form-control" id="nr_cells_${name}" name="nr_of_cells_${name}" value="">
 </div>
 <div class="col">
-    <input type="number" class="form-control" style="width: 150px;" id="dist_${name}" name="dist_${name}" value="">
+    <input type="number" class="form-control" id="dist_${name}" name="dist_${name}" value="">
 </div>
 <div class="col">
-    <input type="number" class="form-control" style="width: 150px;" id="plus_${name}" name="plus_${name}" value="">
+    <input type="number" class="form-control" id="plus_${name}" name="plus_${name}" value="">
 </div>
 <div class="col">
-    <input type="number" class="form-control" style="width: 150px;" id="minus_${name}" name="minus_${name}" value="">
+    <input type="number" class="form-control" id="minus_${name}" name="minus_${name}" value="">
 </div>
 `;
         document.getElementById('existing-rows3').appendChild(newRow);

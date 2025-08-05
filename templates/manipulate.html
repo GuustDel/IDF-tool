@@ -53,40 +53,39 @@
                     </div>
                 </div>
                 {% for name, metadata in string_metadata.items() %} 
-                <div class="row custom-col2">
+                <div class="row mb-2">
                     <div class="col">
-                        <label for="string_{{ name }}" style="width: 200px;">{{ name }}:</label>
+                        <label for="string_{{ name }}">{{ name }}:</label>
                     </div>
                     <div class="col">
-                        <input type="text" class="form-control" style="width: 300px;" id="string_{{ name }}" name="string_{{ name }}" value="{{ name }}">
+                        <input type="text" class="form-control" id="string_{{ name }}" name="string_{{ name }}" value="{{ name }}">
                     </div>
                     <div class="col">
-                        <select class="form-control" style="width: 150px;" id="cell_type_{{ name }}" name="cell_type_{{ name }}">
+                        <select class="form-control" id="cell_type_{{ name }}" name="cell_type_{{ name }}">
                             <option value="M10" {% if metadata['cell_type'] == 'M10' %}selected{% endif %}>M10</option>
                             <option value="M10 HC" {% if metadata['cell_type'] == 'M10 HC' %}selected{% endif %}>M10 HC</option>
                             <option value="G1" {% if metadata['cell_type'] == 'G1' %}selected{% endif %}>G1</option>
                         </select>
                     </div>
                     <div class="col">
-                        <input type="number" class="form-control" style="width: 150px;" id="nr_of_cells_{{ name }}" name="nr_of_cells_{{ name }}" value="{{ metadata['nr_cells'] }}">
+                        <input type="number" class="form-control" id="nr_of_cells_{{ name }}" name="nr_of_cells_{{ name }}" value="{{ metadata['nr_cells'] }}">
                     </div>
                     <div class="col">
-                        <input type="number" class="form-control" style="width: 150px;" id="dist_{{ name }}" name="dist_{{ name }}" value="{{ metadata['dist'] }}">
+                        <input type="number" class="form-control" id="dist_{{ name }}" name="dist_{{ name }}" value="{{ metadata['dist'] }}">
                     </div>
                     <div class="col">
-                        <input type="number" class="form-control" style="width: 150px;" id="plus_{{ name }}" name="plus_{{ name }}" value="{{ metadata['plus'] }}">
+                        <input type="number" class="form-control" id="plus_{{ name }}" name="plus_{{ name }}" value="{{ metadata['plus'] }}">
                     </div>
                     <div class="col">
-                        <input type="number" class="form-control" style="width: 150px;" id="minus_{{ name }}" name="minus_{{ name }}" value="{{ metadata['minus'] }}">
+                        <input type="number" class="form-control" id="minus_{{ name }}" name="minus_{{ name }}" value="{{ metadata['minus'] }}">
                     </div>
                 </div>
                 {% endfor %}
                 {% else %}
                 <pre> Nothing to see here. </pre>
                 {% endif %}
+            <div id="existing-rows3"></div>
             </div>
-
-            <div class="row mb-2" id="existing-rows3"></div>
             <div class="col">
                 <button type="button" style="width: 500px;" class="btn btn-secondary" id="add-row-btn3">➕ Define String Component</button>
             </div>
@@ -124,10 +123,10 @@
                     </div>
 
                     <div class="col">
-                        <label for="string_{{ id }}" style="width: 100px;">{{ id }}:</label>
+                        <label for="string_{{ id }}">{{ id }}:</label>
                     </div>
                     <div class="col">
-                        <select class="form-control" style="width: 300px;" id="name_{{ id }}" name="name_{{ id }}">
+                        <select class="form-control" id="name_{{ id }}" name="name_{{ id }}">
                             {% for name, outline in corrected_component_outlines.items() %} 
                             {% if outline.component_type == "string" %}
                             <option value="{{ name }}" {% if name == placement.name %}selected{% endif %}>{{ name }}</option>
@@ -136,7 +135,7 @@
                         </select>
                     </div>
                     <div class="col">
-                        <select class="form-control" style="width: 80px;" id="string180deg_{{ id }}" name="string180deg_{{ id }}">
+                        <select class="form-control" id="string180deg_{{ id }}" name="string180deg_{{ id }}">
                             <option value="0" {% if w_string[id] == 0 %}selected{% endif %}>0</option>
                             <option value="90" {% if w_string[id] == 90 %}selected{% endif %}>90</option>
                             <option value="180" {% if w_string[id] == 180 %}selected{% endif %}>180</option>
@@ -145,13 +144,13 @@
                         </select>
                     </div>
                     <div class="col">
-                        <input type="number" class="form-control" style="width: 150px;" name="placement_{{ id }}_0" placeholder="Enter a number" value="{{ placement.placement[0] }}">
+                        <input type="number" class="form-control" name="placement_{{ id }}_0" placeholder="Enter a number" value="{{ placement.placement[0] }}">
                     </div>
                     <div class="col">
-                        <input type="number" class="form-control" style="width: 150px;" name="placement_{{ id }}_1" placeholder="Enter a number" value="{{ placement.placement[1] }}">
+                        <input type="number" class="form-control" name="placement_{{ id }}_1" placeholder="Enter a number" value="{{ placement.placement[1] }}">
                     </div>
                     <div class="col">
-                        <input type="number" class="form-control" style="width: 150px;" name="placement_{{ id }}_2" placeholder="Enter a number" value="{{ placement.placement[2] }}">
+                        <input type="number" class="form-control" name="placement_{{ id }}_2" placeholder="Enter a number" value="{{ placement.placement[2] }}">
                     </div>
                 </div>
                 {% endif %}
@@ -163,12 +162,11 @@
 
                 <pre> Nothing to see here. </pre>
                 {% endif %}
+            <div id="existing-rows"></div>
             </div>
-            <div class="row mb-2" id="existing-rows"></div>
             <div class="col">
                 <button type="button" style="width: 500px;" class="btn btn-secondary" id="add-row-btn">📍 Place String on Panel</button>
             </div>
-            <div class="row mb-2" id="existing-rows"></div>
         </fieldset>
         <fieldset class="row custom-col border border-2 rounded-2 busbars-section" style="border-color: #ccc">
             <legend>Busbars</legend>
@@ -219,7 +217,7 @@
                     {% endif %}
                     {% endfor %}
                     <div class="col">
-                        <select class="form-control" style="width: 80px;" id="sbar180deg_{{ sbar }}" name="sbar180deg_{{ sbar }}">
+                        <select class="form-control" id="sbar180deg_{{ sbar }}" name="sbar180deg_{{ sbar }}">
                             <option value="0" {% if w_sbar[sbar] == 0 %}selected{% endif %}>0</option>
                             <option value="90" {% if w_sbar[sbar] == 90 %}selected{% endif %}>90</option>
                             <option value="180" {% if w_sbar[sbar] == 180 %}selected{% endif %}>180</option>
@@ -259,9 +257,8 @@
                 {% else %}
                 <pre> Nothing to see here. </pre>
                 {% endif %}
+            <div id="existing-rows2"></div>
             </div>
-
-            <div class="row mb-2" id="existing-rows2"></div>
             <div class="col">
                 <button type="button" style="width: 500px;" class="btn btn-secondary" id="add-row-btn2">➕ Add Busbar</button>
             </div>
