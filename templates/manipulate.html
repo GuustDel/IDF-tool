@@ -4,7 +4,14 @@
 
 {% block content %}
 <h1>Manipulate</h1>
-<form action="/submit_parameters" method="post" enctype="multipart/form-data", data-filename="{{ filename if filename else '' }}", data-strings="{{ strings if strings else '' }}">
+<form
+  action="/submit_parameters"
+  method="post"
+  enctype="multipart/form-data"
+  data-filename="{{ filename or '' }}"
+  data-strings="{{ strings or [] | tojson }}"
+  id = "manipulate-form"
+>
     <div class="row custom-col">
         <fieldset class="row custom-col border border-2 rounded-2" style="border-color: #ccc">
             <div class="row custom-col2" style="margin: 0;">

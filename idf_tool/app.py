@@ -3,6 +3,10 @@ import sys
 import logging
 import re
 import webbrowser
+import signal
+import subprocess
+from threading import Timer
+from datetime import datetime
 
 from numpy import place
 
@@ -68,6 +72,126 @@ def home():
     graph_json = session.get('graph_json', None)
 
     return render_template('home.html', graph_json=graph_json, fig_dir=fig_dir, enable_drop=True)
+
+@app.route('/create_idf', methods=['POST'])
+def create_idf():
+    # 1) grab the “where to go next”
+    next_page = request.form.get('next_page') or url_for('home')
+    
+    # if it was “/”, reroute to your home_src endpoint instead
+    if next_page == url_for('base'):      # url_for('base') == '/'
+        next_page = url_for('home')       # url_for('home') == '/home_src'
+
+    # fallback if nothing was provided
+    if not next_page:
+        next_page = url_for('home')
+
+    # 2) grab popup fields   
+    project_name   = request.form['project_name']
+    module_nr      = request.form['module_nr']
+    glass_width    = float(request.form['glass_width'])
+    glass_length   = float(request.form['glass_length'])
+    glass_thickness= float(request.form['glass_thickness'])
+
+    # 1) build a timestamp in the same format as your example:
+    date_str = datetime.now().strftime("%Y/%m/%d.%H:%M:%S")
+
+    # 2) build the IDF text:
+    file_content = """ """
+
+    new_file_content = f""".HEADER
+BOARD_FILE 3.0 "IPTE TS1 1.0" {date_str} 1
+"{project_name} // PV-{module_nr}" MM
+.END_HEADER
+.BOARD_OUTLINE UNOWNED
+{glass_thickness}
+0 0.0 0.0 0.0
+0 0.0 -{glass_length} 0.0
+0 -{glass_width} -{glass_length} 0.0
+0 -{glass_width} 0.0 0.0
+0 0.0 0.0 0.0
+.END_BOARD_OUTLINE
+"""
+
+    # 3) derive the filename:
+    filename = f"{project_name}_PV{module_nr}.IDF"
+
+    # now you can write it out:
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(filename))
+    with open(file_path, 'w', encoding='utf-8') as f:
+        f.write(new_file_content)
+
+    # 5) run your existing IDF functions
+    board_outline = idf.board_outline(file_path)
+    component_outlines = idf.component_outlines(file_path)
+    component_placements = idf.component_placements(file_path)
+    sbars, strings = idf.get_component_names_by_type(component_outlines)
+    cell_types = {'M10': [182.0, 182.0, 10, 13.1], 'M10 HC': [182.0, 91.0, 10, 13.1], 'G1': [158.75, 158.75, 5, 16.625]}
+
+    # Data processing
+    corrected_component_outlines = component_outlines.copy()
+    corrected_component_placements = component_placements.copy()
+
+    fig = idf.draw_board(board_outline, component_outlines, component_placements)
+    graph_json = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+
+    w_sbar = {}
+    for sbar in sbars:
+        id = [id for id, placement in corrected_component_placements.items() if placement["name"] == sbar][0]
+        w_sbar[sbar] = corrected_component_placements[id]['placement'][3]
+    z_sbar = {sbar: False for sbar in sbars}
+    new_string_names = session.get('new_string_names', None)
+
+    w_string = {}
+    for id, placement in corrected_component_placements.items():
+        if placement["component_type"] == "string":
+            w_string[id] = corrected_component_placements[id]['placement'][3]
+
+    w_sbar_prev = {}
+    for sbar, value in w_sbar.items():
+        if sbar not in w_sbar_prev:
+            w_sbar_prev[sbar] = []
+        w_sbar_prev[sbar].append(value)
+
+    w_string_prev = {}
+    for id, value in w_string.items():
+        if id not in w_string_prev:
+            w_string_prev[id] = []
+        w_string_prev[id].append(value)
+
+    if new_string_names is None:
+        new_string_names = {string: '' for string in strings}
+
+    string_metadata = {}
+    for string in strings:
+        outline = corrected_component_outlines[string]
+        dist, cell_type, nr_cells, plus, minus = idf.reverse_engineer_string_outline(outline['coordinates'], cell_types)
+        string_metadata[string] = {'dist': dist, 'cell_type': cell_type, 'nr_cells': nr_cells, 'plus': plus, 'minus': minus}
+
+    # Store session data
+    session['string_metadata'] = string_metadata
+    session['cell_types'] = cell_types
+    session['file_content'] = file_content
+    session['new_file_content'] = new_file_content
+    session['graph_json'] = graph_json
+    session['board_outline'] = board_outline
+    session['component_outlines'] = component_outlines
+    session['component_placements'] = component_placements
+    session['corrected_component_outlines'] = corrected_component_outlines
+    session['corrected_component_placements'] = corrected_component_placements
+    session['w_sbar'] = w_sbar
+    session['w_string'] = w_string
+    session['z_sbar'] = z_sbar
+    session['sbars'] = sbars
+    session['strings'] = strings
+    session['w_sbar_prev'] = w_sbar_prev
+    session['w_string_prev'] = w_string_prev
+    session['filename'] = filename
+    
+    logging.info(f"Created IDF {filename} from popup on {request.path}")
+
+    # 6) go back to the page the user was on
+    return redirect(next_page)
 
 @app.route('/submit', methods=['POST'])
 def submit_file():
@@ -138,7 +262,6 @@ def submit_file():
     for string in strings:
         outline = corrected_component_outlines[string]
         dist, cell_type, nr_cells, plus, minus = idf.reverse_engineer_string_outline(outline['coordinates'], cell_types)
-        print(f"String: {string}, dist: {dist}, cell_type: {cell_type}, nr_cells: {nr_cells}, plus: {plus}, minus: {minus}")
         string_metadata[string] = {'dist': dist, 'cell_type': cell_type, 'nr_cells': nr_cells, 'plus': plus, 'minus': minus}
 
     # Store session data
@@ -332,6 +455,8 @@ def manipulate():
     corrected_component_placements = session.get('corrected_component_placements', None)
     corrected_component_outlines = session.get('corrected_component_outlines', None)
     logging.info("Route: /manipulate_src - Session data retrieved")
+
+    print(filename)
     return render_template('manipulate.html', string_metadata=string_metadata, manipulate_after_submit_parameters = True, strings=strings, sbars=sbars, filename=filename, w_sbar=w_sbar, w_string=w_string, new_string_names=new_string_names, z_sbar=z_sbar, corrected_component_placements= corrected_component_placements, fig_dir=fig_dir, corrected_component_outlines=corrected_component_outlines)
 
 @app.route('/remove_busbar', methods=['POST'])
@@ -555,6 +680,19 @@ def generate_string_name():
     print("generate_string_name")
 
     return jsonify(string_name='String M10 HC 5 Cells 2mm +10mm -10mm')
+
+@app.route('/close_port', methods=['POST'])
+def close_port():
+    pid = os.getpid()
+
+    def shutdown():
+        if os.name == 'nt':
+            subprocess.run(['taskkill', '/F', '/PID', str(pid)])
+        else:
+            os.kill(pid, signal.SIGTERM)
+
+    Timer(0.5, shutdown).start()
+    return jsonify(message='Server shutting down', pid=pid)
 
 @app.route('/favicon.ico')
 def favicon():

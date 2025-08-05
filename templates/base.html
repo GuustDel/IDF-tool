@@ -39,20 +39,140 @@
             <button id="closePortBtn" class="btn btn-outline-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSidebar" aria-controls="offcanvasSidebar">
                 Close Port 5000 
             </button>
-            <button class="btn btn-outline-primary ms-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasSidebar" aria-controls="offcanvasSidebar">
+            <button
+                class="btn btn-outline-primary ms-3"
+                type="button"
+                data-bs-toggle="modal"
+                data-bs-target="#newIdfModal"
+            >
                 Create New IDF
             </button>
-        </nav>	
-        <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+        </nav>
 
-        <div class="content">
-            {% block content %}{% endblock %}
-        </div>
+        <!-- ==================== -->
+        <!-- Create New IDF Modal -->
+        <!-- ==================== -->
+        <div
+            class="modal fade"
+            id="newIdfModal"
+            tabindex="-1"
+            aria-labelledby="newIdfModalLabel"
+            aria-hidden="true"
+        >
+            <div class="modal-dialog">
+                <form
+                    class="modal-content"
+                    action="{{ url_for('create_idf') }}"
+                    method="post"
+                    id="modal-form"
+                >
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="newIdfModalLabel">
+                            Create New IDF
+                        </h5>
+                        <button
+                            type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"
+                        ></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <!-- Keep your hidden next_page field -->
+                        <input
+                            type="hidden"
+                            name="next_page"
+                            value="{{ request.path }}"
+                        />
+
+                        <!-- Project Name -->
+                        <div class="mb-3">
+                            <label for="projectName" class="form-label">Project Name</label>
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="projectName"
+                                name="project_name"
+                                required
+                            />
+                        </div>
+
+                        <!-- Module Nr -->
+                        <div class="mb-3">
+                            <label for="moduleNr" class="form-label">Module Nr</label>
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="moduleNr"
+                                name="module_nr"
+                                required
+                            />
+                        </div>
+
+                        <!-- Glass Width -->
+                        <div class="mb-3">
+                            <label for="glassWidth" class="form-label">Glass Width (mm)</label>
+                            <input
+                                type="number"
+                                step="0.1"
+                                class="form-control"
+                                id="glassWidth"
+                                name="glass_width"
+                                required
+                            />
+                        </div>
+
+                        <!-- Glass Length -->
+                        <div class="mb-3">
+                            <label for="glassLength" class="form-label">Glass Length (mm)</label>
+                            <input
+                                type="number"
+                                step="0.1"
+                                class="form-control"
+                                id="glassLength"
+                                name="glass_length"
+                                required
+                            />
+                        </div>
+
+                        <!-- Glass Thickness -->
+                        <div class="mb-3">
+                            <label for="glassThickness" class="form-label">Glass Thickness (mm)</label>
+                            <input
+                                type="number"
+                                step="0.1"
+                                class="form-control"
+                                id="glassThickness"
+                                name="glass_thickness"
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">
+                            Submit IDF
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>        
+        <!-- end modal -->
+
+        <div class="content">{% block content %}{% endblock %}</div>
 
         <footer>
             <p>&copy; 2024 IDF Generator. All rights reserved.</p>
         </footer>
+
+        <!-- Bootstrap & dependencies -->
+        <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+        <script
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"
+    ></script>
     </body>
 </html>

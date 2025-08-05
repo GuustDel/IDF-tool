@@ -56,6 +56,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // target.select();
     // }
 
+    const closePortBtn = document.getElementById('closePortBtn');
+    if (closePortBtn) {
+        closePortBtn.addEventListener('click', function() {
+            fetch('/close_port', {method: 'POST'})
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message || 'Closing port');
+                });
+        });
+    }
+
     // Function to prevent form submission on Enter key press in input fields
     function preventEnterKeySubmission(event) {
         if (event.key === 'Enter') {
@@ -228,7 +239,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function executeSubmitParameters3(name) {
         console.log('Submitting parameters');
 
-        const form = document.querySelector('form');
+        const form = document.getElementById('manipulate-form');
         const formData = new FormData(form);
         formData.append('new_string_name', name)
         formData.append('cell_type', "M10 HC")
@@ -256,7 +267,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function executeSubmitParameters2(busbarName, id) {
         console.log('Submitting parameters');
 
-        const form = document.querySelector('form');
+        const form = document.getElementById('manipulate-form');
         const formData = new FormData(form);
         formData.append('new_sbar_name_dyn', busbarName)
         formData.append('new_sbar180deg_dyn', '0');
@@ -282,7 +293,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function executeSubmitParameters(id) {
         console.log('Submitting parameters');
 
-        const form = document.querySelector('form');
+        const form = document.getElementById('manipulate-form');
         const formData = new FormData(form);
         formData.append('new_string_name_dyn', id)
         formData.append('new_string180deg_dyn', '0');
@@ -304,7 +315,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
 
-    const filename = document.querySelector("form").dataset.filename;
+    const filename = document.getElementById('manipulate-form').dataset.filename;
     const warningMessage = document.getElementById("warning-message");
 
     // Add event listener for Add Busbar
@@ -332,7 +343,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
 
-    const strings = document.querySelector("form").dataset.strings;
+    const strings = document.getElementById('manipulate-form').dataset.strings;
 
     // Add event listener for Place String on Panel
     document.getElementById('add-row-btn').addEventListener('click', function() {
@@ -394,13 +405,13 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('submit-btn').addEventListener('click', function(event) {
         event.preventDefault(); // Prevent form from submitting immediately
 
-        const form = document.querySelector('form');
+        const form = document.getElementById('manipulate-form');
         const formData = new FormData(form);
         const warningMessage = document.getElementById('warning-message');
         let allValid = true;
 
         // Get all number inputs on the page
-        const numberInputs = document.querySelectorAll('input[type="number"]');
+        const numberInputs = form.querySelectorAll('input[type="number"]');
 
         numberInputs.forEach(input => {
             if (input.value === '' || isNaN(input.value)) {
@@ -436,7 +447,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Add event listener to the form submission
-    document.querySelector('form').addEventListener('submit', function(event) {
+    document.getElementById('manipulate-form').addEventListener('submit', function(event) {
         // Convert numeric input values to floats
         document.querySelectorAll('input[type="number"]').forEach(input => {
             input.value = parseFloat(input.value);
