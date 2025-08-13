@@ -5,282 +5,365 @@
 {% block content %}
 <h1>Manipulate</h1>
 <form
-  action="/submit_parameters"
-  method="post"
-  enctype="multipart/form-data"
-  data-filename="{{ filename or '' }}"
-  data-strings="{{ strings or [] | tojson }}"
-  id = "manipulate-form"
->
-    <div class="row custom-col">
-        <fieldset class="row custom-col border border-2 rounded-2" style="border-color: #ccc">
-            <div class="row custom-col2" style="margin: 0;">
-                <p><strong>Active IDF:</strong></p>
-            </div>
-
-            <div class="row custom-col2" style="margin: 0;">
-                {% if filename %}
-                <pre>{{ filename }}</pre>
-                {% else %}
-                <pre>No file submitted</pre>
-                {% endif %}
-            </div>
-        </fieldset>
-        <fieldset class="row custom-col border border-2 rounded-2 strings-section" style="border-color: #ccc">
-            <legend>Strings</legend>
-
-            <div class="strings-meta">
-                {% if string_metadata %}
-                <div class="row custom-col2">
-                    <div class="col"></div>
-                    <div class="col" style="width: 300;">
-                        <span> 
-                            New Name 
-                            <i class="bi bi-info-circle text-secondary ms-1"
-                               data-bs-toggle="tooltip"
-                               data-bs-placement="right"
-                               title="Leave this field empty to auto-generate a name - auto-generated names are formatted as follows: 'String {Cell Type} {Nr of Cells} Cells {Dist}mm +{+}mm -{-}mm' (e.g. 'String M10 HC 8 Cells 28mm +17mm -10mm')">
-                            </i>
-                        </span>
-                    </div>
-                    <div class="col" style="width: 150;">
-                        <span>Cell Type</span>
-                    </div>
-                    <div class="col" style="width: 150;">
-                        <span>Nr of Cells</span>
-                    </div>
-                    <div class="col" style="width: 150;">
-                        <span>
-                            Dist
-                            <i class="bi bi-info-circle text-secondary ms-1"
-                               data-bs-toggle="tooltip"
-                               data-bs-placement="right"
-                               title="Distance between adjacent cells">
-                            </i>
-                        </span>
-                    </div>
-                    <div class="col" style="width: 150;">
-                        <span>+</span>
-                    </div>
-                    <div class="col" style="width: 150;">
-                        <span>-</span>
-                    </div>
+        action="/submit_parameters"
+        method="post"
+        enctype="multipart/form-data"
+        data-filename="{{ filename or '' }}"
+        data-strings="{{ strings or [] | tojson }}"
+        id = "manipulate-form"
+        >
+        <div class="row custom-col">
+            <fieldset class="row custom-col border border-2 rounded-2" style="border-color: #ccc">
+                <div class="row custom-col2" style="margin: 0;">
+                    <p><strong>Active IDF:</strong></p>
                 </div>
-                {% for name, metadata in string_metadata.items() %} 
-                <div class="row mb-2">
-                    <div class="col">
-                        <label for="string_{{ name }}">{{ name }}:</label>
-                    </div>
-                    <div class="col">
-                        <input type="text" class="form-control" id="string_{{ name }}" name="string_{{ name }}" value="{{ name }}">
-                    </div>
-                    <div class="col">
-                        <select class="form-control" id="cell_type_{{ name }}" name="cell_type_{{ name }}">
-                            <option value="M10" {% if metadata['cell_type'] == 'M10' %}selected{% endif %}>M10</option>
-                            <option value="M10 HC" {% if metadata['cell_type'] == 'M10 HC' %}selected{% endif %}>M10 HC</option>
-                            <option value="G1" {% if metadata['cell_type'] == 'G1' %}selected{% endif %}>G1</option>
-                        </select>
-                    </div>
-                    <div class="col">
-                        <input type="number" class="form-control" id="nr_of_cells_{{ name }}" name="nr_of_cells_{{ name }}" value="{{ metadata['nr_cells'] }}">
-                    </div>
-                    <div class="col">
-                        <input type="number" class="form-control" id="dist_{{ name }}" name="dist_{{ name }}" value="{{ metadata['dist'] }}">
-                    </div>
-                    <div class="col">
-                        <input type="number" class="form-control" id="plus_{{ name }}" name="plus_{{ name }}" value="{{ metadata['plus'] }}">
-                    </div>
-                    <div class="col">
-                        <input type="number" class="form-control" id="minus_{{ name }}" name="minus_{{ name }}" value="{{ metadata['minus'] }}">
-                    </div>
-                </div>
-                {% endfor %}
-                {% else %}
-                <pre> Nothing to see here. </pre>
-                {% endif %}
-            <div id="existing-rows3"></div>
-            </div>
-            <div class="col">
-                <button type="button" style="width: 500px;" class="btn btn-secondary" id="add-row-btn3">➕ Define String Component</button>
-            </div>
 
-            <div class="strings-placement">
-                {% if corrected_component_placements and corrected_component_placements.values() | selectattr("component_type", "equalto", "string") | list %}
-                <div class="row custom-col2 text-center align-items-center">
-                    <div class="col"></div>
-                    <div class="col"></div>
-                    <div class="col d-flex justify-content-center">
-                        <span>String</span>
-                    </div>
-                    <div class="col d-flex justify-content-center">
-                        <span>W</span>
-                    </div>
-                    <div class="col d-flex justify-content-center">
-                        <span>X</span>
-                    </div>
-                    <div class="col d-flex justify-content-center">
-                        <span>Y</span>
-                    </div>
-                    <div class="col d-flex justify-content-center">
-                        <span>Z</span>
-                    </div>
+                <div class="row custom-col2" style="margin: 0;">
+                    {% if filename %}
+                    <pre>{{ filename }}</pre>
+                    {% else %}
+                    <pre>No file submitted</pre>
+                    {% endif %}
                 </div>
-                {% for id, placement in corrected_component_placements.items() %}
-                {% if placement.component_type == "string" %}
-                <div class="row mb-2">
-                    <div class="col">
-                        <button type="button" class="btn btn-danger" onclick="removeString('{{id}}')">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3" viewBox="0 0 16 16">
-                                <path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5"/>
-                            </svg>
-                        </button>
-                    </div>
+            </fieldset>
+            <fieldset class="row custom-col border border-2 rounded-2 strings-section" style="border-color: #ccc">
+                <legend>Strings</legend>
 
-                    <div class="col">
-                        <label for="string_{{ id }}">{{ id }}:</label>
+                <div class="strings-meta">
+                    {% if string_metadata %}
+                    <div class="row custom-col2">
+                        <div class="col"></div>
+                        <div class="col" style="width: 300;">
+                            <span> 
+                                New Name 
+                                <i class="bi bi-info-circle text-secondary ms-1"
+                                   data-bs-toggle="tooltip"
+                                   data-bs-placement="right"
+                                   title="Leave this field empty to auto-generate a name - auto-generated names are formatted as follows: 'String {Cell Type} {Nr of Cells} Cells {Dist}mm +{+}mm -{-}mm' (e.g. 'String M10 HC 8 Cells 28mm +17mm -10mm')">
+                                </i>
+                            </span>
+                        </div>
+                        <div class="col" style="width: 150;">
+                            <span>Cell Type</span>
+                        </div>
+                        <div class="col" style="width: 150;">
+                            <span>Nr of Cells</span>
+                        </div>
+                        <div class="col" style="width: 150;">
+                            <span>
+                                Dist
+                                <i class="bi bi-info-circle text-secondary ms-1"
+                                   data-bs-toggle="tooltip"
+                                   data-bs-placement="right"
+                                   title="Distance between adjacent cells">
+                                </i>
+                            </span>
+                        </div>
+                        <div class="col" style="width: 150;">
+                            <span>+</span>
+                        </div>
+                        <div class="col" style="width: 150;">
+                            <span>-</span>
+                        </div>
                     </div>
-                    <div class="col">
-                        <select class="form-control" id="name_{{ id }}" name="name_{{ id }}">
-                            {% for name, outline in corrected_component_outlines.items() %} 
-                            {% if outline.component_type == "string" %}
-                            <option value="{{ name }}" {% if name == placement.name %}selected{% endif %}>{{ name }}</option>
-                            {% endif %}
-                            {% endfor %}
-                        </select>
+                    {% for name, metadata in string_metadata.items() %} 
+                    <div class="row mb-2">
+                        <div class="col">
+                            <label for="string_{{ name }}">{{ name }}:</label>
+                        </div>
+                        <div class="col">
+                            <input type="text" class="form-control" id="string_{{ name }}" name="string_{{ name }}" value="{{ name }}">
+                        </div>
+                        <div class="col">
+                            <select class="form-control" id="cell_type_{{ name }}" name="cell_type_{{ name }}">
+                                <option value="M10" {% if metadata['cell_type'] == 'M10' %}selected{% endif %}>M10</option>
+                                <option value="M10 HC" {% if metadata['cell_type'] == 'M10 HC' %}selected{% endif %}>M10 HC</option>
+                                <option value="G1" {% if metadata['cell_type'] == 'G1' %}selected{% endif %}>G1</option>
+                            </select>
+                        </div>
+                        <div class="col">
+                            <input type="number" class="form-control" id="nr_of_cells_{{ name }}" name="nr_of_cells_{{ name }}" value="{{ metadata['nr_cells'] }}">
+                        </div>
+                        <div class="col">
+                            <input type="number" class="form-control" id="dist_{{ name }}" name="dist_{{ name }}" value="{{ metadata['dist'] }}">
+                        </div>
+                        <div class="col">
+                            <input type="number" class="form-control" id="plus_{{ name }}" name="plus_{{ name }}" value="{{ metadata['plus'] }}">
+                        </div>
+                        <div class="col">
+                            <input type="number" class="form-control" id="minus_{{ name }}" name="minus_{{ name }}" value="{{ metadata['minus'] }}">
+                        </div>
                     </div>
-                    <div class="col">
-                        <select class="form-control" id="string180deg_{{ id }}" name="string180deg_{{ id }}">
-                            <option value="0" {% if w_string[id] == 0 %}selected{% endif %}>0</option>
-                            <option value="90" {% if w_string[id] == 90 %}selected{% endif %}>90</option>
-                            <option value="180" {% if w_string[id] == 180 %}selected{% endif %}>180</option>
-                            <option value="270" {% if w_string[id] == 270 %}selected{% endif %}>270</option>
-                            <option value="-90" {% if w_string[id] == -90 %}selected{% endif %}>-90</option>
-                        </select>
-                    </div>
-                    <div class="col">
-                        <input type="number" class="form-control" name="placement_{{ id }}_0" placeholder="Enter a number" value="{{ placement.placement[0] }}">
-                    </div>
-                    <div class="col">
-                        <input type="number" class="form-control" name="placement_{{ id }}_1" placeholder="Enter a number" value="{{ placement.placement[1] }}">
-                    </div>
-                    <div class="col">
-                        <input type="number" class="form-control" name="placement_{{ id }}_2" placeholder="Enter a number" value="{{ placement.placement[2] }}">
-                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <pre> Nothing to see here. </pre>
+                    {% endif %}
+                    <div id="existing-rows3"></div>
                 </div>
-                {% endif %}
-                {% endfor %}
-                {% else %}
-                <legend> </legend>
-                <legend> </legend>
-                <legend> </legend>
-
-                <pre> Nothing to see here. </pre>
-                {% endif %}
-            <div id="existing-rows"></div>
-            </div>
-            <div class="col">
-                <button type="button" style="width: 500px;" class="btn btn-secondary" id="add-row-btn">📍 Place String on Panel</button>
-            </div>
-        </fieldset>
-        <fieldset class="row custom-col border border-2 rounded-2 busbars-section" style="border-color: #ccc">
-            <legend>Busbars</legend>
-            <legend> </legend>
-
-            <div class="busbars-placement">
-                {% if sbars %}
-                <div class="row">
-                    <div class="col"></div>
-                    <div class="col"></div>
-                    <div class="col">
-                        <span>W</span>
-                    </div>
-                    <div class="col">
-                        <span>Soldering on Panel</span>
-                    </div>
-                    <div class="col">
-                        <span>X</span>
-                    </div>
-                    <div class="col">
-                        <span>Y</span>
-                    </div>
-                    <div class="col">
-                        <span>Z</span>
-                    </div>
-                    <div class="col">
-                        <span>Width</span>
-                    </div>
-                    <div class="col">
-                        <span>Height</span>
-                    </div>
+                <div class="col">
+                    <button type="button" style="width: 500px;" class="btn btn-secondary" id="add-row-btn3">Define String Component</button>
                 </div>
-                {% for sbar in sbars %}
-                {% set is_last = loop.last %} 
-                <div class="row mb-2">
-                    <div class="col">
-                        <button type="button" class="btn btn-danger" onclick="removeBusbar('{{sbar}}')">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3" viewBox="0 0 16 16">
-                                <path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5"/>
-                            </svg>
-                        </button>
+
+                <div class="strings-placement">
+                    {% if corrected_component_placements and corrected_component_placements.values() | selectattr("component_type", "equalto", "string") | list %}
+                    <div class="row custom-col2 text-center align-items-center">
+                        <div class="col"></div>
+                        <div class="col"></div>
+                        <div class="col d-flex justify-content-center">
+                            <span>String</span>
+                        </div>
+                        <div class="col d-flex justify-content-center">
+                            <span>W</span>
+                        </div>
+                        <div class="col d-flex justify-content-center">
+                            <span>X</span>
+                        </div>
+                        <div class="col d-flex justify-content-center">
+                            <span>Y</span>
+                        </div>
+                        <div class="col d-flex justify-content-center">
+                            <span>Z</span>
+                        </div>
                     </div>
                     {% for id, placement in corrected_component_placements.items() %}
-                    {% if placement.name == sbar %}
-                    <div class="col">
-                        <label for="sbar_{{ sbar }}">{{ id }}:</label>
-                    </div>
-                    {% endif %}
-                    {% endfor %}
-                    <div class="col">
-                        <select class="form-control" id="sbar180deg_{{ sbar }}" name="sbar180deg_{{ sbar }}">
-                            <option value="0" {% if w_sbar[sbar] == 0 %}selected{% endif %}>0</option>
-                            <option value="90" {% if w_sbar[sbar] == 90 %}selected{% endif %}>90</option>
-                            <option value="180" {% if w_sbar[sbar] == 180 %}selected{% endif %}>180</option>
-                            <option value="270" {% if w_sbar[sbar] == 270 %}selected{% endif %}>270</option>
-                            <option value="-90" {% if w_sbar[sbar] == -90 %}selected{% endif %}>-90</option>
-                        </select>
-                    </div>
-                    <div class="col">
-                        <input type="checkbox" id="sbarheight_{{ sbar }}" name="sbarheight_{{ sbar }}" {% if z_sbar[sbar] %}checked{% endif %}>
-                    </div>
-                    {% for id, placement in corrected_component_placements.items() %}
-                    {% if placement.name == sbar %}
-                    <div class="col">
-                        <input type="number" class="form-control" name="placement_{{ id }}_0" id="{% if is_last %}autofocus-target{% endif %}" placeholder="Enter a number"placeholder="Enter a number" value="{{ placement.placement[0] }}">
-                    </div>
-                    <div class="col">
-                        <input type="number" class="form-control" name="placement_{{ id }}_1" placeholder="Enter a number" value="{{ placement.placement[1] }}">
-                    </div>
-                    <div class="col">
-                        <input type="number" class="form-control" name="placement_{{ id }}_2" placeholder="Enter a number" value="{{ placement.placement[2] }}">
-                    </div>
-                    {% for name, outline in corrected_component_outlines.items() %} 
-                    {% if name == sbar %}
-                    <div class="col">
-                        <input type="number" class="form-control" name="outline_{{ placement.name }}_0" placeholder="Enter a number" value="{{ outline.coordinates[2][0] }}">
-                    </div>
-                    <div class="col">
-                        <input type="number" class="form-control" name="outline_{{ placement.name }}_1" placeholder="Enter a number" value="{{ outline.coordinates[2][1] }}">
-                    </div>
-                    {% endif %}
-                    {% endfor %}
-                    {% endif %}
+                    {% if placement.component_type == "string" %}
+                    <div class="row mb-2">
+                        <div class="col">
+                            <button type="button" class="btn btn-danger" onclick="removeString('{{id}}')">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3" viewBox="0 0 16 16">
+                                    <path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5"/>
+                                </svg>
+                            </button>
+                        </div>
 
+                        <div class="col">
+                            <label for="string_{{ id }}">{{ id }}:</label>
+                        </div>
+                        <div class="col">
+                            <select class="form-control" id="name_{{ id }}" name="name_{{ id }}">
+                                {% for name, outline in corrected_component_outlines.items() %} 
+                                {% if outline.component_type == "string" %}
+                                <option value="{{ name }}" {% if name == placement.name %}selected{% endif %}>{{ name }}</option>
+                                {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col">
+                            <select class="form-control" id="string180deg_{{ id }}" name="string180deg_{{ id }}">
+                                <option value="0" {% if w_string[id] == 0 %}selected{% endif %}>0</option>
+                                <option value="90" {% if w_string[id] == 90 %}selected{% endif %}>90</option>
+                                <option value="180" {% if w_string[id] == 180 %}selected{% endif %}>180</option>
+                                <option value="270" {% if w_string[id] == 270 %}selected{% endif %}>270</option>
+                                <option value="-90" {% if w_string[id] == -90 %}selected{% endif %}>-90</option>
+                            </select>
+                        </div>
+                        <div class="col">
+                            <input type="number" class="form-control" name="placement_{{ id }}_0" placeholder="Enter a number" value="{{ placement.placement[0] }}">
+                        </div>
+                        <div class="col">
+                            <input type="number" class="form-control" name="placement_{{ id }}_1" placeholder="Enter a number" value="{{ placement.placement[1] }}">
+                        </div>
+                        <div class="col">
+                            <input type="number" class="form-control" name="placement_{{ id }}_2" placeholder="Enter a number" value="{{ placement.placement[2] }}">
+                        </div>
+                    </div>
+                    {% endif %}
                     {% endfor %}
+                    {% else %}
+                    <legend> </legend>
+                    <legend> </legend>
+                    <legend> </legend>
+
+                    <pre> Nothing to see here. </pre>
+                    {% endif %}
+                    <div id="existing-rows"></div>
                 </div>
-                {% endfor %}
-                {% else %}
-                <pre> Nothing to see here. </pre>
-                {% endif %}
-            <div id="existing-rows2"></div>
-            </div>
-            <div class="col">
-                <button type="button" style="width: 500px;" class="btn btn-secondary" id="add-row-btn2">➕ Add Busbar</button>
-            </div>
-        </fieldset>
-    </div>
-    <div id="warning-message" style="color: red; display: none;">
-        {{ warning_message if warning_message else '' }}
-    </div>
-    <button type="button" class="btn btn-outline-primary" id="submit-btn">Submit Parameters</button>
+                <!-- Buttons -->
+                <div style="display: flex; justify-content: center; width: 100%;">
+                    <div style="display: flex; width: 500px;">
+                        <button type="button" class="btn btn-secondary" id="add-row-btn"
+                                                                        style="flex: 1; white-space: nowrap; margin-right: 2px;">
+                            Place String on Panel
+                        </button>
+                        <button type="button"
+                                class="btn btn-secondary"
+                                id="open-autogen-modal-btn"
+                                style="flex: 1; white-space: nowrap; margin-left: 2px;"
+                                data-bs-toggle="modal"
+                                data-bs-target="#autoGenerateModal">
+                            Autogenerate Coordinates
+                        </button>
+                    </div>
+                </div>
+
+            </fieldset>
+            <fieldset class="row custom-col border border-2 rounded-2 busbars-section" style="border-color: #ccc">
+                <legend>Busbars</legend>
+                <legend> </legend>
+
+                <div class="busbars-placement">
+                    {% if sbars %}
+                    <div class="row">
+                        <div class="col"></div>
+                        <div class="col"></div>
+                        <div class="col">
+                            <span>W</span>
+                        </div>
+                        <div class="col">
+                            <span>Soldering on Panel</span>
+                        </div>
+                        <div class="col">
+                            <span>X</span>
+                        </div>
+                        <div class="col">
+                            <span>Y</span>
+                        </div>
+                        <div class="col">
+                            <span>Z</span>
+                        </div>
+                        <div class="col">
+                            <span>Width</span>
+                        </div>
+                        <div class="col">
+                            <span>Height</span>
+                        </div>
+                    </div>
+                    {% for sbar in sbars %}
+                    {% set is_last = loop.last %} 
+                    <div class="row mb-2">
+                        <div class="col">
+                            <button type="button" class="btn btn-danger" onclick="removeBusbar('{{sbar}}')">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3" viewBox="0 0 16 16">
+                                    <path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5"/>
+                                </svg>
+                            </button>
+                        </div>
+                        {% for id, placement in corrected_component_placements.items() %}
+                        {% if placement.name == sbar %}
+                        <div class="col">
+                            <label for="sbar_{{ sbar }}">{{ id }}:</label>
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                        <div class="col">
+                            <select class="form-control" id="sbar180deg_{{ sbar }}" name="sbar180deg_{{ sbar }}">
+                                <option value="0" {% if w_sbar[sbar] == 0 %}selected{% endif %}>0</option>
+                                <option value="90" {% if w_sbar[sbar] == 90 %}selected{% endif %}>90</option>
+                                <option value="180" {% if w_sbar[sbar] == 180 %}selected{% endif %}>180</option>
+                                <option value="270" {% if w_sbar[sbar] == 270 %}selected{% endif %}>270</option>
+                                <option value="-90" {% if w_sbar[sbar] == -90 %}selected{% endif %}>-90</option>
+                            </select>
+                        </div>
+                        <div class="col">
+                            <input type="checkbox" id="sbarheight_{{ sbar }}" name="sbarheight_{{ sbar }}" {% if z_sbar[sbar] %}checked{% endif %}>
+                        </div>
+                        {% for id, placement in corrected_component_placements.items() %}
+                        {% if placement.name == sbar %}
+                        <div class="col">
+                            <input type="number" class="form-control" name="placement_{{ id }}_0" id="{% if is_last %}autofocus-target{% endif %}" placeholder="Enter a number"placeholder="Enter a number" value="{{ placement.placement[0] }}">
+                        </div>
+                        <div class="col">
+                            <input type="number" class="form-control" name="placement_{{ id }}_1" placeholder="Enter a number" value="{{ placement.placement[1] }}">
+                        </div>
+                        <div class="col">
+                            <input type="number" class="form-control" name="placement_{{ id }}_2" placeholder="Enter a number" value="{{ placement.placement[2] }}">
+                        </div>
+                        {% for name, outline in corrected_component_outlines.items() %} 
+                        {% if name == sbar %}
+                        <div class="col">
+                            <input type="number" class="form-control" name="outline_{{ placement.name }}_0" placeholder="Enter a number" value="{{ outline.coordinates[2][0] }}">
+                        </div>
+                        <div class="col">
+                            <input type="number" class="form-control" name="outline_{{ placement.name }}_1" placeholder="Enter a number" value="{{ outline.coordinates[2][1] }}">
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                        {% endif %}
+
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <pre> Nothing to see here. </pre>
+                    {% endif %}
+                    <div id="existing-rows2"></div>
+                </div>
+                <div class="col">
+                    <button type="button" style="width: 500px;" class="btn btn-secondary" id="add-row-btn2">Add Busbar</button>
+                </div>
+            </fieldset>
+        </div>
+        <div id="warning-message" style="color: red; display: none;">
+            {{ warning_message if warning_message else '' }}
+        </div>
+        <button type="button" class="btn btn-outline-primary" id="submit-btn">Submit Parameters</button>
 </form>
+
+<!-- Autogenerate Coordinates Modal -->
+<div class="modal fade" id="autoGenerateModal" tabindex="-1" aria-labelledby="autoGenerateModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form class="modal-content" id="auto-generate-form" action="{{ url_for('submit_parameters') }}" method="post">
+      <div class="modal-header">
+        <h5 class="modal-title" id="autoGenerateModalLabel">Autogenerate String Coordinates</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <!-- String Offset X -->
+        <div class="mb-3">
+          <label for="stringOffsetX" class="form-label">String Offset X</label>
+          <input type="number" step="0.1" class="form-control" id="stringOffsetX" name="string_offset_x" required>
+        </div>
+
+        <!-- String Offset Y -->
+        <div class="mb-3">
+          <label for="stringOffsetY" class="form-label">String Offset Y</label>
+          <input type="number" step="0.1" class="form-control" id="stringOffsetY" name="string_offset_y" required>
+        </div>
+
+        <!-- Offset Between Strings -->
+        <div class="mb-3">
+          <label for="offsetBetweenStrings" class="form-label">Offset Between Strings</label>
+          <input type="number" step="0.1" class="form-control" id="offsetBetweenStrings" name="offset_between_strings" required>
+        </div>
+
+        <!-- Strings multi-select -->
+        <div class="mb-3">
+          <label for="stringsToAutogenerate" class="form-label">Strings to Autogenerate</label>
+
+          {% set placements = corrected_component_placements or {} %}
+          {% set strings = placements.values() | selectattr('component_type','equalto','string') | list %}
+          {% set string_count = strings|length %}
+
+          <select class="form-select"
+                  id="stringsToAutogenerate"
+                  name="strings_to_autogenerate"
+                  multiple
+                  size="{{ string_count if string_count and string_count < 10 else 10 }}"
+                  {% if string_count %}required{% else %}disabled aria-disabled="true"{% endif %}>
+            {% for cid, pl in placements.items() if pl.get('component_type') == 'string' %}
+              <option value="{{ cid }}">{{ cid }}</option>
+            {% endfor %}
+            {% if not string_count %}
+              <option disabled>(No string components yet)</option>
+            {% endif %}
+          </select>
+          {% if string_count %}
+            <div class="form-text">Select one or more strings.</div>
+          {% else %}
+            <div class="form-text text-danger">Please place a string first.</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-primary" {% if not string_count %}disabled aria-disabled="true"{% endif %}>
+          Generate
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+<!-- end modal -->
+
 {% endblock %}

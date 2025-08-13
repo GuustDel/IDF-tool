@@ -141,6 +141,21 @@ legend {
     text-align: left;
 }
 
+/* Make the multi-select flush with the border */
+#stringsToAutogenerate.form-select[multiple],
+#stringsToAutogenerate.form-select[size]:not([size="1"]) {
+  padding: 0 !important;              /* remove inset */
+  background-image: none !important;  /* hide arrow */
+  background-color: #fff !important;  /* avoid gray OS default */
+  line-height: 1.25;                  /* comfortable row height */
+  box-sizing: border-box;
+}
+
+/* Comfortable option padding (visual indent without outer padding) */
+#stringsToAutogenerate.form-select option {
+  padding: 0.375rem 0.75rem;
+}
+
 /* ------------------------------------------
    Section 1: Strings → Metadata Editor
 ------------------------------------------ */

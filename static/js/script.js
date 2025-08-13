@@ -343,8 +343,20 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
 
-    const strings = document.getElementById('manipulate-form').dataset.strings;
+    const stringsRaw = document.getElementById('manipulate-form').dataset.strings;
 
+    function parseStrings(raw) {
+        if (raw == null || raw === "") return [];
+        try {
+            return JSON.parse(raw);
+        } catch (e) {
+            // Fallback if server sent single quotes instead of valid JSON
+            try { return JSON.parse(raw.replace(/'/g, '"')); } catch { return []; }
+        }
+    }
+
+    const strings = parseStrings(stringsRaw);
+    
     // Add event listener for Place String on Panel
     document.getElementById('add-row-btn').addEventListener('click', function() {
         if (!filename) {
@@ -352,11 +364,14 @@ document.addEventListener('DOMContentLoaded', function() {
             warningMessage.style.display = "block";
             return; // stop execution
         }
-        if (!strings) {
+        console.log(strings)
+        if (!Array.isArray(strings) || strings.length === 0) {
+            console.log("inside if statement")
             warningMessage.textContent = "Please define a string component first.";
             warningMessage.style.display = "block";
             return; // stop execution
         }
+
         warningMessage.style.display = "none";
 
         console.log('Adding new string');
@@ -452,5 +467,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('input[type="number"]').forEach(input => {
             input.value = parseFloat(input.value);
         });
-    });   
+    });
 });
+
+

@@ -292,6 +292,30 @@ def rotate(corrected_component_placements, corrected_component_outlines, w_sbar_
                     corrected_component_placements[id]['placement'][3] = -90
     return
 
+def autogenerate_string_coordinates(offset_x, offset_y, offset_between, corrected_component_placements, string_metadata, cell_types, strings_to_autogenerate):
+
+    # Build the processing list
+    if strings_to_autogenerate is None:
+        # All string components (preserves dict iteration order)
+        ids_to_process = [
+            cid for cid, pl in corrected_component_placements.items()
+            if pl.get("component_type") == "string"
+        ]
+    else:
+        # Only requested IDs, preserve the requested order
+        ids_to_process = [
+            cid for cid in strings_to_autogenerate
+            if corrected_component_placements.get(cid, {}).get("component_type") == "string"
+        ]
+
+    counter = 1
+    for id in ids_to_process:
+        string_width = cell_types[string_metadata[corrected_component_placements[id]['name']]['cell_type']][0]
+        string_length = string_metadata[corrected_component_placements[id]['name']]['nr_cells'] * cell_types[string_metadata[corrected_component_placements[id]['name']]['cell_type']][1] + (string_metadata[corrected_component_placements[id]['name']]['nr_cells']-1) * string_metadata[corrected_component_placements[id]['name']]['dist']
+        corrected_component_placements[id]["placement"][0] = -offset_x - counter*string_width - (counter-1)*offset_between
+        corrected_component_placements[id]["placement"][1] = -offset_y - string_length
+        counter += 1
+
 def regenerate_idf_file_content(file_path, corrected_component_outlines, corrected_component_placements):
     with open(file_path, 'r') as f:
         lines = f.readlines()

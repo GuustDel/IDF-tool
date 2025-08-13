@@ -8,8 +8,6 @@ import subprocess
 from threading import Timer
 from datetime import datetime
 
-from numpy import place
-
 # pyinstaller --noconsole --add-data "templates:templates" --add-data "submits:submits" --add-data "uploads:uploads" --add-data "static:static" --add-data "favicon.ico:." idf_tool/app.py
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -77,7 +75,7 @@ def home():
 def create_idf():
     # 1) grab the “where to go next”
     next_page = request.form.get('next_page') or url_for('home')
-    
+
     # if it was “/”, reroute to your home_src endpoint instead
     if next_page == url_for('base'):      # url_for('base') == '/'
         next_page = url_for('home')       # url_for('home') == '/home_src'
@@ -187,7 +185,7 @@ BOARD_FILE 3.0 "IPTE TS1 1.0" {date_str} 1
     session['w_sbar_prev'] = w_sbar_prev
     session['w_string_prev'] = w_string_prev
     session['filename'] = filename
-    
+
     logging.info(f"Created IDF {filename} from popup on {request.path}")
 
     # 6) go back to the page the user was on
@@ -304,7 +302,7 @@ def submit_parameters():
     w_sbar = session.get('w_sbar', {sbar: 0.0 for sbar in sbars})
     cell_types = session.get('cell_types', {})
     logging.info("Route: /submit_parameters - Session data retrieved")
-
+    
     # HTML Parsing
     new_string_names = {key[7:]: request.form[key] for key in request.form if key.startswith('string_')}
 
@@ -321,7 +319,7 @@ def submit_parameters():
     # Place a new busbar or string on the panel
     if request.form.get('new_sbar_name_dyn', None) is not None or request.form.get('new_string_name_dyn', None) is not None:
         idf.add_components(request.form, corrected_component_outlines, corrected_component_placements, w_sbar, z_sbar, w_string, sbars, strings)
-
+    
     # Define a new string component
     if request.form.get('cell_type', None) is not None:
         cell_name = request.form.get('new_string_name', "String M10 HC 5 Cells 2mm +10mm -10mm")
@@ -332,10 +330,10 @@ def submit_parameters():
         minus = float(request.form.get('minus', 10.0))
         corrected_component_outlines = idf.generate_string_outline(cell_type, nr_cells, dist, plus, minus, corrected_component_outlines, cell_name, cell_types, None)
         strings.append(cell_name)
-        print("0", corrected_component_outlines)
-
+    
     for i, string in enumerate(strings):
-        if request.form.get(f'nr_of_cells_{string}') != "" and request.form.get(f'dist_{string}') != "" and request.form.get(f'plus_{string}') != "" and request.form.get(f'minus_{string}') != "":
+        required = [f'nr_of_cells_{string}', f'dist_{string}', f'plus_{string}', f'minus_{string}']
+        if all((request.form.get(k) or '').strip() != '' for k in required):
             del corrected_component_outlines[string]
 
             cell_type = request.form.get(f'cell_type_{string}', "M10 HC")
@@ -352,7 +350,6 @@ def submit_parameters():
                 if placement["name"] == string:
                     placement['name'] = cell_name
             strings = [name for name, outline in corrected_component_outlines.items() if outline['component_type'] == 'string']
-
 
     for sbar, value in w_sbar.items():
         if sbar not in w_sbar_prev:
@@ -390,11 +387,18 @@ def submit_parameters():
         if placement["component_type"] == "string":
             w_string[id] = corrected_component_placements[id]['placement'][3]
 
+    offset_x       = request.form.get('string_offset_x', type=float)
+    offset_y       = request.form.get('string_offset_y', type=float)
+    offset_between = request.form.get('offset_between_strings', type=float)
+    strings_to_autogenerate = request.form.getlist('strings_to_autogenerate') or None
+
+    if offset_x is not None and offset_y is not None and offset_between is not None and strings_to_autogenerate is not None:
+        idf.autogenerate_string_coordinates(offset_x=offset_x, offset_y=offset_y, offset_between=offset_between, corrected_component_placements=corrected_component_placements, string_metadata=string_metadata, cell_types=cell_types, strings_to_autogenerate=strings_to_autogenerate)
+
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     new_file_content = idf.regenerate_idf_file_content(file_path, corrected_component_outlines, corrected_component_placements)
     logging.info("Route: /submit_parameters - Data processed")
 
-    print(corrected_component_outlines)
     # Store session data
     session['string_metadata'] = string_metadata
     session['new_file_content'] = new_file_content
@@ -595,8 +599,9 @@ def visualize_src():
 @app.route('/about_src')
 def about():
     fig_dir = url_for('static', filename='img/Soltech_Logo.png')
+    pdf_dir = url_for('static', filename='pdf/BIV4ALL IDF file format.pdf')
 
-    return render_template('about.html', fig_dir=fig_dir)
+    return render_template('about.html', fig_dir=fig_dir, pdf_dir=pdf_dir)
 
 @app.route('/export', methods=['POST'])
 def export():
@@ -700,4 +705,4 @@ def favicon():
 
 if __name__ == '__main__':
     webbrowser.open("http://127.0.0.1:5000")
-    app.run(port=5000, debug=True)
+    app.run(port=5000)
