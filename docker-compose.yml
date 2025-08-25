@@ -1,0 +1,10 @@
+services:
+  idf-tool:
+    build: .
+    container_name: idf-tool
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./submits:/app/submits
