@@ -85,13 +85,13 @@ def create_idf():
         next_page = url_for('home')
 
     # 2) grab popup fields   
-    project_name   = request.form['project_name']
-    module_nr      = request.form['module_nr']
+    project_name = request.form['project_name'].replace(" ", "_")
+    module_nr    = request.form['module_nr'].replace(" ", "_")
     glass_width    = float(request.form['glass_width'])
     glass_length   = float(request.form['glass_length'])
     glass_thickness= float(request.form['glass_thickness'])
 
-    # 1) build a timestamp in the same format as your example:
+    # 1) build a timestamp:
     date_str = datetime.now().strftime("%Y/%m/%d.%H:%M:%S")
 
     # 2) build the IDF text:
@@ -99,7 +99,7 @@ def create_idf():
 
     new_file_content = f""".HEADER
 BOARD_FILE 3.0 "IPTE TS1 1.0" {date_str} 1
-"{project_name} // PV-{module_nr}" MM
+"{project_name} // {module_nr}" MM
 .END_HEADER
 .BOARD_OUTLINE UNOWNED
 {glass_thickness}
@@ -112,7 +112,7 @@ BOARD_FILE 3.0 "IPTE TS1 1.0" {date_str} 1
 """
 
     # 3) derive the filename:
-    filename = f"{project_name}_PV{module_nr}.IDF"
+    filename = f"{project_name}_{module_nr}.IDF"
 
     # now you can write it out:
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(filename))
@@ -686,23 +686,16 @@ def generate_string_name():
 
     return jsonify(string_name='String M10 HC 5 Cells 2mm +10mm -10mm')
 
-@app.route('/close_port', methods=['POST'])
-def close_port():
-    pid = os.getpid()
-
-    def shutdown():
-        if os.name == 'nt':
-            subprocess.run(['taskkill', '/F', '/PID', str(pid)])
-        else:
-            os.kill(pid, signal.SIGTERM)
-
-    Timer(0.5, shutdown).start()
-    return jsonify(message='Server shutting down', pid=pid)
-
 @app.route('/favicon.ico')
 def favicon():
     return send_from_directory(os.path.join(os.getcwd(), 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 if __name__ == '__main__':
-    webbrowser.open("http://127.0.0.1:5000")
-    app.run(port=5000)
+    # In containers, don't try to open a local browser.
+    # Bind on 0.0.0.0 so Docker port mapping works; default to 5000 for dev.
+    port = int(os.environ.get('PORT', '5000'))
+    debug = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
+    # webbrowser.open("http://127.0.0.1:5000")  # disable in Docker/servers
+    app.run(host='0.0.0.0', port=port, debug=debug)
+
+

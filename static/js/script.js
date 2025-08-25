@@ -56,17 +56,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // target.select();
     // }
 
-    const closePortBtn = document.getElementById('closePortBtn');
-    if (closePortBtn) {
-        closePortBtn.addEventListener('click', function() {
-            fetch('/close_port', {method: 'POST'})
-                .then(response => response.json())
-                .then(data => {
-                    alert(data.message || 'Closing port');
-                });
-        });
-    }
-
     // Function to prevent form submission on Enter key press in input fields
     function preventEnterKeySubmission(event) {
         if (event.key === 'Enter') {
